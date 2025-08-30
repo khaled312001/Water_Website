@@ -722,7 +722,7 @@
                     <ul class="list-unstyled">
                         <li class="mb-2">
                             <i class="fas fa-phone me-2 text-primary"></i>
-                            +966 50 123 4567
+                           0508260274
                         </li>
                         <li class="mb-2">
                             <i class="fas fa-envelope me-2 text-primary"></i>

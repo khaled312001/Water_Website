@@ -377,13 +377,29 @@ class AdminController extends Controller
         $order = Order::findOrFail($id);
         
         $request->validate([
-            'status' => 'required|in:pending,confirmed,preparing,assigned,picked_up,delivered,cancelled',
+            'status' => 'nullable|in:pending,confirmed,preparing,assigned,picked_up,delivered,cancelled',
             'payment_status' => 'nullable|in:pending,paid,failed',
             'notes' => 'nullable|string',
         ]);
 
         try {
-            $order->update($request->all());
+            $order->update($request->only(['status', 'payment_status', 'notes']));
+            
+            // تحديث حالة الدفع في جدول payments أيضاً
+            if ($request->has('payment_status') && $order->payment) {
+                $paymentStatus = $request->payment_status;
+                
+                // تحويل payment_status إلى status في جدول payments
+                $paymentStatusMap = [
+                    'pending' => 'pending',
+                    'paid' => 'verified',
+                    'failed' => 'failed'
+                ];
+                
+                $order->payment->update([
+                    'status' => $paymentStatusMap[$paymentStatus] ?? 'pending'
+                ]);
+            }
             
             return response()->json([
                 'success' => true,

@@ -19,6 +19,10 @@
                             <i class="fas fa-download me-2"></i>
                             تصدير التقرير
                         </a>
+                        <button class="btn btn-delivery btn-outline-primary" onclick="exportComprehensiveReport()">
+                            <i class="fas fa-file-export me-2"></i>
+                            تصدير تقرير شامل
+                        </button>
                     </div>
                 </div>
             </div>
@@ -151,10 +155,7 @@
                     </table>
                 </div>
 
-                <!-- Pagination -->
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $earningsHistory->links() }}
-                </div>
+                <!-- No pagination needed for 30 records -->
                 @else
                 <div class="text-center py-5">
                     <div class="stat-icon bg-light text-muted mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
@@ -304,6 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function exportComprehensiveReport() {
+    window.location.href = '{{ route("delivery.export.comprehensive") }}';
+}
 </script>
 @endsection
 @endsection 

@@ -155,6 +155,67 @@
         </div>
     </div>
 
+    <!-- Performance Summary -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    ملخص الأداء
+                </h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>أرباح اليوم</span>
+                        <span class="fw-bold">{{ number_format($todayEarnings, 2) }} ريال</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: {{ min($todayEarnings * 2, 100) }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>نسبة الطلبات المكتملة</span>
+                        <span class="fw-bold">{{ $completionRate ?? 0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: {{ $completionRate ?? 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-target text-danger me-2"></i>
+                    الأهداف
+                </h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>الهدف اليومي (10 توصيلات)</span>
+                        <span class="fw-bold">{{ $todayDeliveries ?? 0 }}/10</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: {{ min(($todayDeliveries ?? 0) * 10, 100) }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>الهدف الشهري (300 توصيل)</span>
+                        <span class="fw-bold">{{ $monthlyDeliveries ?? 0 }}/300</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: {{ min(($monthlyDeliveries ?? 0) / 3, 100) }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Current Orders -->
     <div class="row">
         <div class="col-lg-8">

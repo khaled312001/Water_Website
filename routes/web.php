@@ -167,6 +167,9 @@ Route::middleware(['auth'])->group(function () {
     // Test route without middleware
     Route::get('/test-supplier', [AdminController::class, 'supplierDashboard'])->name('test.supplier');
     
+    // Test route for delivery men (temporary)
+    Route::get('/test-delivery-men', [AdminController::class, 'getAvailableDeliveryMen'])->name('test.delivery-men');
+    
     // Debug route to check user and supplier
     Route::get('/debug-supplier', function() {
         if (!auth()->check()) {
@@ -200,9 +203,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/earnings', [DeliveryController::class, 'earnings'])->name('earnings');
         Route::get('/profile', [DeliveryController::class, 'profile'])->name('profile');
         Route::put('/profile', [DeliveryController::class, 'updateProfile'])->name('profile.update');
-        Route::get('/export/orders', [DeliveryController::class, 'exportOrders'])->name('export.orders');
-        Route::get('/export/earnings', [DeliveryController::class, 'exportEarnings'])->name('export.earnings');
-        Route::get('/export/profile', [DeliveryController::class, 'exportProfile'])->name('export.profile');
+            Route::get('/export/orders', [DeliveryController::class, 'exportOrders'])->name('export.orders');
+    Route::get('/export/earnings', [DeliveryController::class, 'exportEarnings'])->name('export.earnings');
+    Route::get('/export/profile', [DeliveryController::class, 'exportProfile'])->name('export.profile');
+    Route::get('/export/comprehensive', [DeliveryController::class, 'exportComprehensiveReport'])->name('export.comprehensive');
+    Route::get('/debug/delivery', [DeliveryController::class, 'debugDelivery'])->name('debug.delivery');
     });
 
     // Customer Routes

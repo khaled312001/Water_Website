@@ -35,6 +35,26 @@ class DeliveryController extends Controller
             ->where('status', 'delivered')
             ->sum('delivery_fee');
 
+        // Get delivery counts
+        $todayDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'delivered')
+            ->count();
+
+        $monthlyDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'delivered')
+            ->count();
+
+        // Calculate completion rate
+        $totalOrders = Order::where('delivery_man_id', $deliveryMan->id)->count();
+        $completedOrders = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->count();
+        
+        $completionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100, 1) : 0;
+
         // Get recent orders
         $recentOrders = Order::where('delivery_man_id', $deliveryMan->id)
             ->with(['customer', 'product', 'supplier'])
@@ -47,6 +67,9 @@ class DeliveryController extends Controller
             'todayOrders',
             'pendingOrders',
             'todayEarnings',
+            'todayDeliveries',
+            'monthlyDeliveries',
+            'completionRate',
             'recentOrders'
         ));
     }
@@ -88,7 +111,7 @@ class DeliveryController extends Controller
         $deliveryMan = Auth::user()->deliveryMan;
         
         if (!$deliveryMan) {
-            return redirect()->back()->with('error', 'Delivery man profile not found.');
+            return response()->json(['success' => false, 'message' => 'Delivery man profile not found.'], 404);
         }
 
         $order = Order::where('delivery_man_id', $deliveryMan->id)
@@ -111,7 +134,7 @@ class DeliveryController extends Controller
             $deliveryMan->update(['status' => 'available']);
         }
 
-        return redirect()->back()->with('success', 'Order status updated successfully.');
+        return response()->json(['success' => true, 'message' => 'تم تحديث حالة الطلب بنجاح']);
     }
 
     public function updateLocation(Request $request)
@@ -177,6 +200,36 @@ class DeliveryController extends Controller
             ->where('status', 'delivered')
             ->sum('delivery_fee');
 
+        // Get delivery counts
+        $todayDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'delivered')
+            ->count();
+
+        $monthlyDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'delivered')
+            ->count();
+
+        // Calculate completion rate
+        $totalOrders = Order::where('delivery_man_id', $deliveryMan->id)->count();
+        $completedOrders = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->count();
+        
+        $completionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100, 1) : 0;
+
+        // Get total earnings
+        $totalEarnings = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->sum('delivery_fee');
+
+        // Get total deliveries
+        $totalDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->count();
+
         // Get earnings history
         $earningsHistory = Order::where('delivery_man_id', $deliveryMan->id)
             ->where('status', 'delivered')
@@ -191,6 +244,11 @@ class DeliveryController extends Controller
             'todayEarnings',
             'weekEarnings',
             'monthEarnings',
+            'todayDeliveries',
+            'monthlyDeliveries',
+            'completionRate',
+            'totalEarnings',
+            'totalDeliveries',
             'earningsHistory'
         ));
     }
@@ -244,6 +302,164 @@ class DeliveryController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'تم تحديث الملف الشخصي بنجاح');
+    }
+
+    public function exportComprehensiveReport()
+    {
+        $deliveryMan = Auth::user()->deliveryMan;
+        
+        if (!$deliveryMan) {
+            return redirect()->back()->with('error', 'Delivery man profile not found.');
+        }
+
+        // Get comprehensive statistics
+        $todayEarnings = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'delivered')
+            ->sum('delivery_fee');
+
+        $weekEarnings = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->where('status', 'delivered')
+            ->sum('delivery_fee');
+
+        $monthEarnings = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'delivered')
+            ->sum('delivery_fee');
+
+        $todayDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'delivered')
+            ->count();
+
+        $monthlyDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('status', 'delivered')
+            ->count();
+
+        $totalOrders = Order::where('delivery_man_id', $deliveryMan->id)->count();
+        $completedOrders = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->count();
+        
+        $completionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100, 1) : 0;
+
+        // Get detailed earnings history
+        $earningsHistory = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->selectRaw('DATE(created_at) as date, SUM(delivery_fee) as total_earnings, COUNT(*) as deliveries')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        // Get recent orders with details
+        $recentOrders = Order::where('delivery_man_id', $deliveryMan->id)
+            ->with(['customer', 'product', 'supplier'])
+            ->latest()
+            ->take(50)
+            ->get();
+
+        // Generate CSV content
+        $filename = 'delivery_report_' . $deliveryMan->id . '_' . date('Y-m-d') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($deliveryMan, $todayEarnings, $weekEarnings, $monthEarnings, 
+                                   $todayDeliveries, $monthlyDeliveries, $completionRate, 
+                                   $earningsHistory, $recentOrders) {
+            $file = fopen('php://output', 'w');
+            
+            // Write report header
+            fputcsv($file, ['تقرير شامل لمندوب التوصيل']);
+            fputcsv($file, ['اسم المندوب: ' . $deliveryMan->user->name]);
+            fputcsv($file, ['تاريخ التقرير: ' . date('Y-m-d H:i:s')]);
+            fputcsv($file, []);
+            
+            // Write summary statistics
+            fputcsv($file, ['ملخص الإحصائيات']);
+            fputcsv($file, ['أرباح اليوم', $todayEarnings . ' ريال']);
+            fputcsv($file, ['أرباح الأسبوع', $weekEarnings . ' ريال']);
+            fputcsv($file, ['أرباح الشهر', $monthEarnings . ' ريال']);
+            fputcsv($file, ['توصيلات اليوم', $todayDeliveries]);
+            fputcsv($file, ['توصيلات الشهر', $monthlyDeliveries]);
+            fputcsv($file, ['نسبة الإنجاز', $completionRate . '%']);
+            fputcsv($file, []);
+            
+            // Write earnings history
+            fputcsv($file, ['سجل الأرباح اليومية']);
+            fputcsv($file, ['التاريخ', 'إجمالي الأرباح', 'عدد التوصيلات']);
+            foreach ($earningsHistory as $record) {
+                fputcsv($file, [$record->date, $record->total_earnings . ' ريال', $record->deliveries]);
+            }
+            fputcsv($file, []);
+            
+            // Write recent orders
+            fputcsv($file, ['الطلبات الحديثة']);
+            fputcsv($file, ['رقم الطلب', 'العميل', 'المنتج', 'المورد', 'الحالة', 'رسوم التوصيل', 'التاريخ']);
+            foreach ($recentOrders as $order) {
+                fputcsv($file, [
+                    $order->id,
+                    $order->customer->name ?? 'غير محدد',
+                    $order->product->name ?? 'غير محدد',
+                    $order->supplier->name ?? 'غير محدد',
+                    $order->status,
+                    $order->delivery_fee . ' ريال',
+                    $order->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function debugDelivery()
+    {
+        $deliveryMan = Auth::user()->deliveryMan;
+        
+        if (!$deliveryMan) {
+            return response()->json(['error' => 'Delivery man not found']);
+        }
+
+        $allOrders = Order::where('delivery_man_id', $deliveryMan->id)->get();
+        $deliveredOrders = Order::where('delivery_man_id', $deliveryMan->id)
+            ->where('status', 'delivered')
+            ->get();
+        
+        $todayDeliveries = Order::where('delivery_man_id', $deliveryMan->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'delivered')
+            ->get();
+
+        return response()->json([
+            'delivery_man_id' => $deliveryMan->id,
+            'total_orders' => $allOrders->count(),
+            'delivered_orders' => $deliveredOrders->count(),
+            'today_deliveries' => $todayDeliveries->count(),
+            'today_date' => Carbon::today()->format('Y-m-d'),
+            'all_orders' => $allOrders->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'status' => $order->status,
+                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                    'delivery_man_id' => $order->delivery_man_id
+                ];
+            }),
+            'delivered_orders_details' => $deliveredOrders->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                    'delivery_fee' => $order->delivery_fee
+                ];
+            })
+        ]);
     }
 
     public function exportOrders()

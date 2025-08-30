@@ -2,54 +2,48 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
-use App\Models\DeliveryMan;
+use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\DeliveryMan;
+use Carbon\Carbon;
 
 class OrderSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $products = Product::all();
+        // Get existing data
         $customers = User::where('role', 'customer')->get();
-        $deliveryMen = DeliveryMan::all();
+        $products = Product::all();
         $suppliers = Supplier::all();
+        $deliveryMen = DeliveryMan::all();
 
-        $orderStatuses = ['pending', 'confirmed', 'preparing', 'assigned', 'picked_up', 'delivered', 'cancelled'];
-        $paymentMethods = ['cash', 'card', 'online'];
-        $deliveryAddresses = [
-            'حي العزيزية، شارع الملك عبدالله، مكة المكرمة',
-            'حي الشوقية، شارع العزيزية، مكة المكرمة',
-            'حي المسفلة، شارع المنصور، مكة المكرمة',
-            'حي العتيبية، شارع العتيبية، مكة المكرمة',
-            'حي المنصور، شارع الشوقية، مكة المكرمة',
-        ];
+        if ($customers->isEmpty() || $products->isEmpty() || $suppliers->isEmpty() || $deliveryMen->isEmpty()) {
+            $this->command->info('Skipping order seeding - missing required data');
+            return;
+        }
 
-        // Create 50 orders
-        for ($i = 0; $i < 50; $i++) {
+        // Create orders for today (delivered)
+        for ($i = 0; $i < 5; $i++) {
             $customer = $customers->random();
             $product = $products->random();
-            $supplier = $suppliers->where('id', $product->supplier_id)->first();
+            $supplier = $suppliers->random();
             $deliveryMan = $deliveryMen->random();
-            $status = $orderStatuses[array_rand($orderStatuses)];
-            $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
-            $deliveryAddress = $deliveryAddresses[array_rand($deliveryAddresses)];
-            
-            // Random order date within last 3 months
-            $orderDate = now()->subDays(rand(1, 90));
-            
+
             $quantity = rand(1, 5);
             $unitPrice = $product->price_per_bottle;
             $subtotal = $unitPrice * $quantity;
-            $deliveryFee = rand(10, 25);
-            $commission = $subtotal * 0.1; // 10% commission
+            $deliveryFee = rand(10, 30);
             $totalAmount = $subtotal + $deliveryFee;
-            
+
             Order::create([
-                'order_number' => 'ORD-' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                'order_number' => 'ORD-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 'customer_id' => $customer->id,
                 'supplier_id' => $supplier->id,
                 'delivery_man_id' => $deliveryMan->id,
@@ -58,19 +52,93 @@ class OrderSeeder extends Seeder
                 'unit_price' => $unitPrice,
                 'subtotal' => $subtotal,
                 'delivery_fee' => $deliveryFee,
-                'commission' => $commission,
+                'commission' => rand(5, 15),
                 'total_amount' => $totalAmount,
-                'delivery_address' => $deliveryAddress,
+                'delivery_address' => 'عنوان تجريبي ' . ($i + 1),
                 'delivery_city' => 'مكة المكرمة',
-                'customer_phone' => $customer->phone,
+                'customer_phone' => $customer->phone ?? '0500000000',
                 'customer_name' => $customer->name,
-                'notes' => rand(0, 1) ? 'يرجى التوصيل في الصباح' : null,
-                'status' => $status,
-                'payment_status' => $status === 'delivered' ? 'paid' : 'pending',
-                'payment_method' => $paymentMethod,
-                'created_at' => $orderDate,
-                'updated_at' => $orderDate,
+                'status' => 'delivered',
+                'payment_status' => 'paid',
+                'payment_method' => 'cash',
+                'created_at' => Carbon::today()->addHours(rand(9, 18)),
+                'actual_delivery_time' => Carbon::today()->addHours(rand(9, 18))->addMinutes(rand(30, 120)),
             ]);
         }
+
+        // Create orders for this month (delivered)
+        for ($i = 0; $i < 15; $i++) {
+            $customer = $customers->random();
+            $product = $products->random();
+            $supplier = $suppliers->random();
+            $deliveryMan = $deliveryMen->random();
+
+            $quantity = rand(1, 5);
+            $unitPrice = $product->price_per_bottle;
+            $subtotal = $unitPrice * $quantity;
+            $deliveryFee = rand(10, 30);
+            $totalAmount = $subtotal + $deliveryFee;
+
+            Order::create([
+                'order_number' => 'ORD-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'customer_id' => $customer->id,
+                'supplier_id' => $supplier->id,
+                'delivery_man_id' => $deliveryMan->id,
+                'product_id' => $product->id,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => $subtotal,
+                'delivery_fee' => $deliveryFee,
+                'commission' => rand(5, 15),
+                'total_amount' => $totalAmount,
+                'delivery_address' => 'عنوان تجريبي ' . ($i + 6),
+                'delivery_city' => 'مكة المكرمة',
+                'customer_phone' => $customer->phone ?? '0500000000',
+                'customer_name' => $customer->name,
+                'status' => 'delivered',
+                'payment_status' => 'paid',
+                'payment_method' => 'cash',
+                'created_at' => Carbon::now()->subDays(rand(1, 30)),
+                'actual_delivery_time' => Carbon::now()->subDays(rand(1, 30))->addMinutes(rand(30, 120)),
+            ]);
+        }
+
+        // Create some pending orders
+        for ($i = 0; $i < 3; $i++) {
+            $customer = $customers->random();
+            $product = $products->random();
+            $supplier = $suppliers->random();
+            $deliveryMan = $deliveryMen->random();
+
+            $quantity = rand(1, 5);
+            $unitPrice = $product->price_per_bottle;
+            $subtotal = $unitPrice * $quantity;
+            $deliveryFee = rand(10, 30);
+            $totalAmount = $subtotal + $deliveryFee;
+
+            Order::create([
+                'order_number' => 'ORD-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'customer_id' => $customer->id,
+                'supplier_id' => $supplier->id,
+                'delivery_man_id' => $deliveryMan->id,
+                'product_id' => $product->id,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => $subtotal,
+                'delivery_fee' => $deliveryFee,
+                'commission' => rand(5, 15),
+                'total_amount' => $totalAmount,
+                'delivery_address' => 'عنوان تجريبي ' . ($i + 21),
+                'delivery_city' => 'مكة المكرمة',
+                'customer_phone' => $customer->phone ?? '0500000000',
+                'customer_name' => $customer->name,
+                'status' => 'assigned',
+                'payment_status' => 'paid',
+                'payment_method' => 'cash',
+                'created_at' => Carbon::now(),
+            ]);
+        }
+
+        $this->command->info('Orders seeded successfully!');
     }
 } 

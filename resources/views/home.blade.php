@@ -52,7 +52,7 @@
             </div>
             <div class="col-lg-6 text-center" data-aos="fade-left">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+                    <img src="https://smartgift.sa/wp-content/uploads/elementor/thumbs/%D8%A7%D9%84%D9%83%D9%81%D8%B1-%D8%AC%D8%AF%D9%8A%D8%AF-1-qofo5ok5ovquwgumizy4va3q51vjanfhx2d64gsg7e.png" 
                          alt="مياه عذبة" class="img-fluid rounded-4 shadow-lg" style="max-height: 500px; width: 100%; object-fit: cover;">
                     
                     <!-- Floating Elements -->
