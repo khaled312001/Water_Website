@@ -143,12 +143,7 @@
                             الملف الشخصي
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <button class="btn btn-delivery btn-outline-info w-100" onclick="showSettings()">
-                            <i class="fas fa-cog me-2"></i>
-                            الإعدادات
-                        </button>
-                    </div>
+
                     <div class="col-md-3 mb-3">
                         <button class="btn btn-delivery btn-outline-success w-100" onclick="exportComprehensiveReport()">
                             <i class="fas fa-file-export me-2"></i>
@@ -686,7 +681,7 @@ function showStatusReport() {
 }
 
 // Settings Function
-function showSettings() {
+// function showSettings() {
     const settings = `
         <div class="modal fade" id="settingsModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -771,7 +766,7 @@ function showSettings() {
 }
 
 // Save Settings Function
-function saveSettings() {
+// function saveSettings() {
     const settings = {
         orderNotifications: document.getElementById('orderNotifications').checked,
         locationUpdates: document.getElementById('locationUpdates').checked,

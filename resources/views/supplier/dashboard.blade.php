@@ -108,12 +108,7 @@
                             تقارير الأرباح
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-admin btn-outline-info w-100">
-                            <i class="fas fa-cog me-2"></i>
-                            الإعدادات
-                        </a>
-                    </div>
+
                 </div>
             </div>
         </div>

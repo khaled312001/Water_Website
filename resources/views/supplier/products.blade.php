@@ -15,11 +15,11 @@
                         <p class="text-muted mb-0">إدارة منتجاتك وعرض إحصائياتها</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('admin.products.create') }}" class="btn btn-admin btn-primary">
+                        <a href="{{ route('supplier.products.create') }}" class="btn btn-supplier btn-primary">
                             <i class="fas fa-plus me-2"></i>
                             إضافة منتج جديد
                         </a>
-                        <button class="btn btn-admin btn-outline-secondary">
+                        <button class="btn btn-supplier btn-outline-secondary">
                             <i class="fas fa-download me-2"></i>
                             تصدير البيانات
                         </button>
@@ -52,11 +52,11 @@
                         <div class="col-md-3 mb-3">
                             <label class="form-label">&nbsp;</label>
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-admin btn-primary flex-grow-1">
+                                <button type="submit" class="btn btn-supplier btn-primary flex-grow-1">
                                     <i class="fas fa-search me-2"></i>
                                     بحث
                                 </button>
-                                <a href="{{ route('supplier.products') }}" class="btn btn-admin btn-outline-secondary">
+                                <a href="{{ route('supplier.products') }}" class="btn btn-supplier btn-outline-secondary">
                                     <i class="fas fa-times"></i>
                                 </a>
                             </div>
@@ -107,7 +107,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $product->price_per_box }} ريال</div>
+                                    <div class="fw-bold">{{ number_format($product->price_per_box, 2) }} ريال</div>
+                                    <small class="text-muted">{{ number_format($product->price_per_bottle, 2) }} ريال/عبوة</small>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -124,15 +125,20 @@
                                     <div class="fw-bold">{{ $product->orders->count() }}</div>
                                 </td>
                                 <td>
-                                    @if($product->is_active)
-                                        <span class="badge-admin bg-success">
+                                    @if($product->status == 'available')
+                                        <span class="badge bg-success">
                                             <i class="fas fa-check me-1"></i>
                                             متاح
                                         </span>
+                                    @elseif($product->status == 'out_of_stock')
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            نفذت الكمية
+                                        </span>
                                     @else
-                                        <span class="badge-admin bg-danger">
+                                        <span class="badge bg-danger">
                                             <i class="fas fa-times me-1"></i>
-                                            غير متاح
+                                            متوقف
                                         </span>
                                     @endif
                                 </td>
@@ -142,13 +148,13 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.products.show', $product->id) }}" class="btn btn-sm btn-outline-primary" title="عرض">
+                                        <a href="{{ route('supplier.products.show', $product->id) }}" class="btn btn-sm btn-outline-primary" title="عرض">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-outline-warning" title="تعديل">
+                                        <a href="{{ route('supplier.products.edit', $product->id) }}" class="btn btn-sm btn-outline-warning" title="تعديل">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.products.delete', $product->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المنتج؟')">
+                                        <form action="{{ route('supplier.products.delete', $product->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المنتج؟')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">

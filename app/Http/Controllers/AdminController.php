@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
@@ -543,7 +544,32 @@ class AdminController extends Controller
     // Supplier dashboard methods
     public function supplierDashboard()
     {
-        return 'Supplier dashboard method works!';
+        try {
+            $supplier = auth()->user()->supplier;
+            
+            if (!$supplier) {
+                return response('Supplier not found', 404);
+            }
+            
+            $stats = [
+                'total_products' => Product::where('supplier_id', $supplier->id)->count(),
+                'total_orders' => Order::where('supplier_id', $supplier->id)->count(),
+                'total_earnings' => Order::where('supplier_id', $supplier->id)->sum('total_amount'),
+                'new_orders' => Order::where('supplier_id', $supplier->id)->where('status', 'pending')->count(),
+                'completed_orders' => Order::where('supplier_id', $supplier->id)->where('status', 'delivered')->count(),
+                'active_products' => Product::where('supplier_id', $supplier->id)->where('status', 'available')->count(),
+            ];
+
+            $recentOrders = Order::where('supplier_id', $supplier->id)
+                ->with(['customer', 'product'])
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return view('supplier.dashboard', compact('stats', 'recentOrders'));
+        } catch (\Exception $e) {
+            return response('Error: ' . $e->getMessage(), 500);
+        }
     }
 
     public function supplierProducts()
@@ -572,5 +598,105 @@ class AdminController extends Controller
             ->paginate(30);
 
         return view('supplier.earnings', compact('earnings'));
+    }
+
+    // Supplier Product Management Methods
+    public function supplierCreateProduct()
+    {
+        return view('supplier.products.create');
+    }
+
+    public function supplierStoreProduct(Request $request)
+    {
+        $supplier = auth()->user()->supplier;
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'brand' => 'required|string|max:255',
+            'size' => 'required|string|max:255',
+            'quantity_per_box' => 'required|integer|min:1',
+            'price_per_box' => 'required|numeric|min:0',
+            'price_per_bottle' => 'required|numeric|min:0',
+            'type' => 'required|in:mineral,distilled,spring,alkaline',
+            'stock_quantity' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = $request->all();
+        $data['supplier_id'] = $supplier->id;
+        $data['status'] = 'available';
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        Product::create($data);
+
+        return redirect()->route('supplier.products')->with('success', 'تم إضافة المنتج بنجاح');
+    }
+
+    public function supplierShowProduct($id)
+    {
+        $supplier = auth()->user()->supplier;
+        $product = Product::where('supplier_id', $supplier->id)->findOrFail($id);
+        
+        return view('supplier.products.show', compact('product'));
+    }
+
+    public function supplierEditProduct($id)
+    {
+        $supplier = auth()->user()->supplier;
+        $product = Product::where('supplier_id', $supplier->id)->findOrFail($id);
+        
+        return view('supplier.products.edit', compact('product'));
+    }
+
+    public function supplierUpdateProduct(Request $request, $id)
+    {
+        $supplier = auth()->user()->supplier;
+        $product = Product::where('supplier_id', $supplier->id)->findOrFail($id);
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'brand' => 'required|string|max:255',
+            'size' => 'required|string|max:255',
+            'quantity_per_box' => 'required|integer|min:1',
+            'price_per_box' => 'required|numeric|min:0',
+            'price_per_bottle' => 'required|numeric|min:0',
+            'type' => 'required|in:mineral,distilled,spring,alkaline',
+            'stock_quantity' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
+
+        return redirect()->route('supplier.products')->with('success', 'تم تحديث المنتج بنجاح');
+    }
+
+    public function supplierDeleteProduct($id)
+    {
+        $supplier = auth()->user()->supplier;
+        $product = Product::where('supplier_id', $supplier->id)->findOrFail($id);
+        
+        // Delete image if exists
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+        
+        $product->delete();
+
+        return redirect()->route('supplier.products')->with('success', 'تم حذف المنتج بنجاح');
     }
 }

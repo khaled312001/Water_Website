@@ -27,10 +27,18 @@ Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('contact
 Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers');
 
 // Supplier Routes (must be before supplier/{id} route)
-Route::get('/supplier/dashboard', [AdminController::class, 'supplierDashboard'])->name('supplier.dashboard');
-Route::get('/supplier/products', [AdminController::class, 'supplierProducts'])->name('supplier.products');
-Route::get('/supplier/orders', [AdminController::class, 'supplierOrders'])->name('supplier.orders');
-Route::get('/supplier/earnings', [AdminController::class, 'supplierEarnings'])->name('supplier.earnings');
+Route::middleware(['auth', 'supplier'])->group(function () {
+    Route::get('/supplier/dashboard', [AdminController::class, 'supplierDashboard'])->name('supplier.dashboard');
+    Route::get('/supplier/products', [AdminController::class, 'supplierProducts'])->name('supplier.products');
+    Route::get('/supplier/products/create', [AdminController::class, 'supplierCreateProduct'])->name('supplier.products.create');
+    Route::post('/supplier/products', [AdminController::class, 'supplierStoreProduct'])->name('supplier.products.store');
+    Route::get('/supplier/products/{id}', [AdminController::class, 'supplierShowProduct'])->name('supplier.products.show');
+    Route::get('/supplier/products/{id}/edit', [AdminController::class, 'supplierEditProduct'])->name('supplier.products.edit');
+    Route::put('/supplier/products/{id}', [AdminController::class, 'supplierUpdateProduct'])->name('supplier.products.update');
+    Route::delete('/supplier/products/{id}', [AdminController::class, 'supplierDeleteProduct'])->name('supplier.products.delete');
+    Route::get('/supplier/orders', [AdminController::class, 'supplierOrders'])->name('supplier.orders');
+    Route::get('/supplier/earnings', [AdminController::class, 'supplierEarnings'])->name('supplier.earnings');
+});
 
 Route::get('/supplier/{id}', [HomeController::class, 'supplierDetails'])->name('supplier.details');
 
