@@ -73,7 +73,22 @@ class Order extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function profit()
+    {
+        return $this->hasOne(Profit::class);
+    }
+
     // Methods
+    public function isPendingPayment()
+    {
+        return $this->status === 'pending_payment';
+    }
+
     public function isPending()
     {
         return $this->status === 'pending';

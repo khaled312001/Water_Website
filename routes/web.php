@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 
@@ -25,6 +26,8 @@ Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('contact.submit');
 Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers.index');
+
+
 
 // Supplier Routes (must be before supplier/{id} route)
 Route::middleware(['auth', 'supplier'])->group(function () {
@@ -75,8 +78,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders/{id}/track', [OrderController::class, 'track'])->name('orders.track');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/track', [OrderController::class, 'track'])->name('orders.track');
+
+    // Payment Routes
+    Route::get('/payments/{order}', [PaymentController::class, 'showPaymentForm'])->name('payments.show');
+    Route::get('/payments/new-order/{order}', [PaymentController::class, 'showNewOrderPayment'])->name('payments.new-order');
+    Route::post('/payments/{order}/process', [PaymentController::class, 'processPayment'])->name('payments.process');
+    Route::get('/payments/{payment}/receipt', [PaymentController::class, 'showReceipt'])->name('payments.receipt');
 
     // Admin Routes
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -112,10 +121,12 @@ Route::middleware(['auth'])->group(function () {
         
         // Orders Management
         Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
-        Route::get('/orders/{id}', [AdminController::class, 'showOrder'])->name('orders.show');
-        Route::get('/orders/{id}/edit', [AdminController::class, 'editOrder'])->name('orders.edit');
-        Route::put('/orders/{id}', [AdminController::class, 'updateOrder'])->name('orders.update');
-        Route::delete('/orders/{id}', [AdminController::class, 'deleteOrder'])->name('orders.delete');
+        Route::get('/orders/{order}', [AdminController::class, 'showOrder'])->name('orders.show');
+        Route::get('/orders/{order}/edit', [AdminController::class, 'editOrder'])->name('orders.edit');
+        Route::put('/orders/{order}', [AdminController::class, 'updateOrder'])->name('orders.update');
+        Route::delete('/orders/{order}', [AdminController::class, 'deleteOrder'])->name('orders.delete');
+        Route::post('/orders/{order}/assign-delivery', [AdminController::class, 'assignDeliveryMan'])->name('orders.assign-delivery');
+        Route::get('/delivery-men/available', [AdminController::class, 'getAvailableDeliveryMen'])->name('delivery-men.available');
         
         // Products Management
         Route::get('/products', [AdminController::class, 'products'])->name('products');
@@ -135,6 +146,13 @@ Route::middleware(['auth'])->group(function () {
         
         // Reports
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        
+        // Payments & Profits Management
+        Route::get('/payments', [AdminController::class, 'payments'])->name('payments');
+        Route::get('/payments/pending', [AdminController::class, 'pendingPayments'])->name('payments.pending');
+        Route::post('/payments/{payment}/verify', [PaymentController::class, 'verifyPayment'])->name('payments.verify');
+        Route::post('/profits/distribute', [PaymentController::class, 'distributeProfits'])->name('profits.distribute');
+        Route::get('/profits', [AdminController::class, 'profits'])->name('profits');
         
         // Export Routes
         Route::get('/export/dashboard', [AdminController::class, 'exportDashboard'])->name('export.dashboard');
@@ -175,8 +193,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['delivery'])->prefix('delivery')->name('delivery.')->group(function () {
         Route::get('/dashboard', [DeliveryController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [DeliveryController::class, 'orders'])->name('orders');
-        Route::get('/orders/{id}', [DeliveryController::class, 'orderDetails'])->name('order.details');
-        Route::post('/orders/{id}/status', [DeliveryController::class, 'updateOrderStatus'])->name('order.status');
+        Route::get('/orders/{order}', [DeliveryController::class, 'orderDetails'])->name('order.details');
+        Route::post('/orders/{order}/status', [DeliveryController::class, 'updateOrderStatus'])->name('order.status');
         Route::post('/location', [DeliveryController::class, 'updateLocation'])->name('update-location');
         Route::post('/status', [DeliveryController::class, 'updateStatus'])->name('update-status');
         Route::get('/earnings', [DeliveryController::class, 'earnings'])->name('earnings');

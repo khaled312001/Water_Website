@@ -11,6 +11,9 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\DeliveryMan;
 use App\Models\Review;
+use App\Models\Payment;
+use App\Models\Profit;
+use App\Models\ProfitDistribution;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -29,12 +32,17 @@ class AdminController extends Controller
             'new_orders_today' => Order::whereDate('created_at', today())->count(),
             'active_suppliers' => Supplier::where('status', 'active')->count(),
             'revenue_this_month' => Order::whereMonth('created_at', now()->month)->sum('total_amount'),
+            'pending_payments' => Payment::where('status', 'pending')->count(),
         ];
 
         $recentOrders = Order::with(['customer', 'product'])->latest()->take(5)->get();
-        $notifications = collect([]); // Empty collection for now
+        $pendingPayments = Payment::with(['order.customer', 'order.product'])
+            ->where('status', 'pending')
+            ->latest()
+            ->take(5)
+            ->get();
 
-        return view('admin.dashboard', compact('stats', 'recentOrders', 'notifications'));
+        return view('admin.dashboard', compact('stats', 'recentOrders', 'pendingPayments'));
     }
 
     // Users Management
@@ -347,7 +355,8 @@ class AdminController extends Controller
             $query->where('payment_status', $request->payment_status);
         }
         
-        $orders = $query->paginate(15)->withQueryString();
+        // ترتيب الطلبات حسب الأحدث أولاً
+        $orders = $query->latest()->paginate(15)->withQueryString();
         return view('admin.orders', compact('orders'));
     }
 
@@ -369,12 +378,23 @@ class AdminController extends Controller
         
         $request->validate([
             'status' => 'required|in:pending,confirmed,preparing,assigned,picked_up,delivered,cancelled',
-            'payment_status' => 'required|in:pending,paid,failed',
+            'payment_status' => 'nullable|in:pending,paid,failed',
             'notes' => 'nullable|string',
         ]);
 
-        $order->update($request->all());
-        return redirect()->route('admin.orders')->with('success', 'تم تحديث الطلب بنجاح');
+        try {
+            $order->update($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث حالة الطلب بنجاح!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء تحديث حالة الطلب: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function deleteOrder($id)
@@ -1422,5 +1442,84 @@ class AdminController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function payments()
+    {
+        $payments = Payment::with(['order.customer', 'order.product'])->latest()->paginate(20);
+        $profits = Profit::with(['order'])->latest()->paginate(20);
+        $distributions = ProfitDistribution::with(['user', 'bankAccount'])->latest()->paginate(20);
+        
+        return view('admin.payments', compact('payments', 'profits', 'distributions'));
+    }
+
+    public function profits()
+    {
+        $profits = Profit::with(['order', 'distributions'])->latest()->paginate(20);
+        
+        // Calculate total profits
+        $totalProfitMargin = Profit::sum('profit_margin');
+        $totalAdminCommission = Profit::sum('admin_commission');
+        $totalDeliveryCommission = Profit::sum('delivery_commission');
+        $pendingProfits = Profit::where('status', 'pending')->count();
+        
+        return view('admin.profits', compact('profits', 'totalProfitMargin', 'totalAdminCommission', 'totalDeliveryCommission', 'pendingProfits'));
+    }
+
+    public function pendingPayments()
+    {
+        $pendingPayments = Payment::with(['order.customer', 'order.product'])
+            ->where('status', 'pending')
+            ->latest()
+            ->paginate(15);
+        
+        return view('admin.payments.pending', compact('pendingPayments'));
+    }
+
+    public function assignDeliveryMan(Request $request, Order $order)
+    {
+        $request->validate([
+            'delivery_man_id' => 'required|exists:delivery_men,id',
+        ]);
+
+        try {
+            $order->update([
+                'delivery_man_id' => $request->delivery_man_id,
+                'status' => $order->status === 'pending' ? 'confirmed' : 'assigned',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إسناد الطلب لمندوب التوصيل بنجاح!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء إسناد الطلب: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getAvailableDeliveryMen()
+    {
+        try {
+            $deliveryMen = DeliveryMan::with('user')
+                ->where('status', 'available')
+                ->get()
+                ->map(function ($deliveryMan) {
+                    return [
+                        'id' => $deliveryMan->id,
+                        'name' => $deliveryMan->user ? $deliveryMan->user->name : 'غير محدد',
+                        'phone' => $deliveryMan->user ? $deliveryMan->user->phone : 'غير محدد',
+                        'current_orders' => $deliveryMan->orders()->whereIn('status', ['assigned', 'picked_up'])->count(),
+                    ];
+                });
+
+            \Log::info('Available delivery men:', $deliveryMen->toArray());
+            return response()->json($deliveryMen);
+        } catch (\Exception $e) {
+            \Log::error('Error in getAvailableDeliveryMen: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

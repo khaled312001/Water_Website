@@ -72,6 +72,16 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class);
+    }
+
+    public function profitDistributions()
+    {
+        return $this->hasMany(ProfitDistribution::class);
+    }
+
     // Methods
     public function isAdmin()
     {

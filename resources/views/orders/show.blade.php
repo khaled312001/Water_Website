@@ -75,6 +75,9 @@
                             <h6 class="fw-bold mb-3">حالة الطلب</h6>
                             <div class="mb-3">
                                 @switch($order->status)
+                                    @case('pending_payment')
+                                        <span class="badge bg-danger fs-6">في انتظار الدفع</span>
+                                        @break
                                     @case('pending')
                                         <span class="badge bg-warning fs-6">قيد الانتظار</span>
                                         @break
@@ -102,10 +105,51 @@
                                 <strong>حالة الدفع:</strong>
                                 @if($order->payment_status === 'paid')
                                     <span class="badge bg-success">مدفوع</span>
+                                    @if($order->payment && $order->payment->status === 'pending')
+                                        <br><small class="text-warning">
+                                            <i class="fas fa-clock me-1"></i>
+                                            في انتظار تأكيد الإدارة لعملية الدفع
+                                        </small>
+                                    @elseif($order->payment && $order->payment->status === 'verified')
+                                        <br><small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            تم تأكيد الدفع من الإدارة
+                                        </small>
+                                    @endif
                                 @else
                                     <span class="badge bg-warning">قيد الانتظار</span>
                                 @endif
                             </div>
+
+                            @if($order->payment)
+                                <div class="mb-3">
+                                    <strong>طريقة الدفع:</strong>
+                                    <span class="badge bg-info">{{ $order->payment->payment_method_text }}</span>
+                                </div>
+                                
+                                @if($order->payment->status === 'pending')
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-clock me-2"></i>
+                                        في انتظار تأكيد عملية الدفع من الإدارة
+                                        @if($order->payment->payment_method === 'bank_transfer')
+                                            <br><small>يرجى إرفاق إيصال التحويل البنكي</small>
+                                        @endif
+                                    </div>
+                                @elseif($order->payment->status === 'verified')
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        تم تأكيد الدفع من الإدارة بنجاح
+                                    </div>
+                                @elseif($order->payment->status === 'failed')
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-times-circle me-2"></i>
+                                        تم رفض الدفع من الإدارة
+                                        @if($order->payment->notes)
+                                            <br><small>السبب: {{ $order->payment->notes }}</small>
+                                        @endif
+                                    </div>
+                                @endif
+                            @endif
                         </div>
                         
                         <div class="col-md-6">
@@ -141,6 +185,18 @@
                     </a>
                     
                     <div class="d-grid gap-2">
+                        @if($order->status === 'pending_payment')
+                            <a href="{{ route('payments.new-order', $order->id) }}" class="btn btn-danger">
+                                <i class="fas fa-credit-card me-2"></i>
+                                إتمام الدفع لتأكيد الطلب
+                            </a>
+                        @elseif(!$order->payment || $order->payment->status === 'pending')
+                            <a href="{{ route('payments.show', $order->id) }}" class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>
+                                إتمام الدفع
+                            </a>
+                        @endif
+                        
                         <a href="{{ route('orders.index') }}" class="btn btn-outline-primary">
                             <i class="fas fa-list me-2"></i>
                             جميع الطلبات

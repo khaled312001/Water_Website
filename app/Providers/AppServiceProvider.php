@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,5 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Configure pagination to use Bootstrap 5
         Paginator::useBootstrap();
+        
+        // ضبط Carbon على توقيت مكة المكرمة
+        Carbon::setLocale('ar');
     }
 }

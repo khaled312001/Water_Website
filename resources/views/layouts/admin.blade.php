@@ -568,6 +568,10 @@
                     <i class="fas fa-chart-bar"></i>
                     التقارير
                 </a>
+                <a href="{{ route('admin.payments') }}" class="nav-link {{ request()->routeIs('admin.payments') ? 'active' : '' }}">
+                    <i class="fas fa-credit-card"></i>
+                    المدفوعات والأرباح
+                </a>
             </nav>
         </div>
         

@@ -60,6 +60,9 @@
                                             </td>
                                             <td>
                                                 @switch($order->status)
+                                                    @case('pending_payment')
+                                                        <span class="badge bg-danger">في انتظار الدفع</span>
+                                                        @break
                                                     @case('pending')
                                                         <span class="badge bg-warning">قيد الانتظار</span>
                                                         @break
@@ -89,10 +92,17 @@
                                                        class="btn btn-outline-primary" title="عرض التفاصيل">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('orders.track', $order->id) }}" 
-                                                       class="btn btn-outline-info" title="تتبع الطلب">
-                                                        <i class="fas fa-truck"></i>
-                                                    </a>
+                                                    @if($order->status === 'pending_payment')
+                                                        <a href="{{ route('payments.new-order', $order->id) }}" 
+                                                           class="btn btn-outline-danger" title="إتمام الدفع">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ route('orders.track', $order->id) }}" 
+                                                           class="btn btn-outline-info" title="تتبع الطلب">
+                                                            <i class="fas fa-truck"></i>
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>

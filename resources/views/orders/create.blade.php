@@ -12,6 +12,12 @@
                         <i class="fas fa-plus me-2"></i>
                         إنشاء طلب جديد
                     </h4>
+                    @if($selectedProductId)
+                        <small class="opacity-75">
+                            <i class="fas fa-check-circle me-1"></i>
+                            تم تحديد المنتج تلقائياً من صفحة المنتجات
+                        </small>
+                    @endif
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('orders.store') }}">
@@ -28,7 +34,12 @@
                                 @foreach($products as $product)
                                     <option value="{{ $product->id }}" 
                                             data-price="{{ $product->price_per_box }}"
-                                            data-supplier="{{ $product->supplier->company_name }}">
+                                            data-supplier="{{ $product->supplier->company_name }}"
+                                            data-description="{{ $product->description }}"
+                                            data-image="{{ $product->image ? asset('storage/' . $product->image) : 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' }}"
+                                            data-brand="{{ $product->brand }}"
+                                            data-size="{{ $product->size }}"
+                                            {{ $selectedProductId == $product->id ? 'selected' : '' }}>
                                         {{ $product->name }} - {{ $product->supplier->company_name }} 
                                         ({{ number_format($product->price_per_box, 2) }} ريال)
                                     </option>
@@ -37,6 +48,27 @@
                             @error('product_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        <!-- Selected Product Details -->
+                        <div id="selectedProductDetails" class="mb-4" style="display: none;">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <img id="productImage" src="" alt="صورة المنتج" class="img-fluid rounded" style="max-height: 120px; object-fit: cover;">
+                                        </div>
+                                        <div class="col-md-9">
+                                            <h6 id="productName" class="text-primary mb-2"></h6>
+                                            <p id="productDescription" class="text-muted small mb-2"></p>
+                                            <div class="d-flex gap-2">
+                                                <span id="productBrand" class="badge bg-primary"></span>
+                                                <span id="productSize" class="badge bg-secondary"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -92,6 +124,8 @@
                                     </div>
                                     <div class="col-md-6">
                                         <p class="mb-1"><strong>الكمية:</strong> <span id="selectedQuantity">1</span></p>
+                                        <p class="mb-1"><strong>سعر المورد:</strong> <span id="supplierPrice">-</span></p>
+                                        <p class="mb-1"><strong>هامش الربح (20%):</strong> <span id="profitMargin">-</span></p>
                                         <p class="mb-1"><strong>المجموع:</strong> <span id="totalAmount" class="text-primary fw-bold">-</span></p>
                                     </div>
                                 </div>
@@ -108,6 +142,8 @@
                                 إنشاء الطلب
                             </button>
                         </div>
+                        
+
                     </form>
                 </div>
             </div>
@@ -123,7 +159,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedSupplier = document.getElementById('selectedSupplier');
     const unitPrice = document.getElementById('unitPrice');
     const selectedQuantity = document.getElementById('selectedQuantity');
+    const supplierPrice = document.getElementById('supplierPrice');
+    const profitMargin = document.getElementById('profitMargin');
     const totalAmount = document.getElementById('totalAmount');
+    
+    // عناصر تفاصيل المنتج المحدد
+    const selectedProductDetails = document.getElementById('selectedProductDetails');
+    const productImage = document.getElementById('productImage');
+    const productName = document.getElementById('productName');
+    const productDescription = document.getElementById('productDescription');
+    const productBrand = document.getElementById('productBrand');
+    const productSize = document.getElementById('productSize');
 
     function updateOrderSummary() {
         const selectedOption = productSelect.options[productSelect.selectedIndex];
@@ -131,24 +177,48 @@ document.addEventListener('DOMContentLoaded', function() {
         if (productSelect.value) {
             const price = parseFloat(selectedOption.dataset.price);
             const quantity = parseInt(quantityInput.value);
-            const total = price * quantity;
+            const supplierTotal = price * quantity;
+            const profit = supplierTotal * 0.20; // 20% هامش ربح
+            const total = supplierTotal + profit;
 
+            // تحديث ملخص الطلب
             selectedProduct.textContent = selectedOption.text.split(' - ')[0];
             selectedSupplier.textContent = selectedOption.dataset.supplier;
             unitPrice.textContent = price.toFixed(2) + ' ريال';
             selectedQuantity.textContent = quantity;
+            supplierPrice.textContent = supplierTotal.toFixed(2) + ' ريال';
+            profitMargin.textContent = profit.toFixed(2) + ' ريال';
             totalAmount.textContent = total.toFixed(2) + ' ريال';
+            
+            // عرض تفاصيل المنتج المحدد
+            productImage.src = selectedOption.dataset.image;
+            productName.textContent = selectedOption.text.split(' - ')[0];
+            productDescription.textContent = selectedOption.dataset.description;
+            productBrand.textContent = selectedOption.dataset.brand;
+            productSize.textContent = selectedOption.dataset.size;
+            selectedProductDetails.style.display = 'block';
         } else {
+            // إخفاء تفاصيل المنتج
+            selectedProductDetails.style.display = 'none';
+            
+            // إعادة تعيين ملخص الطلب
             selectedProduct.textContent = '-';
             selectedSupplier.textContent = '-';
             unitPrice.textContent = '-';
             selectedQuantity.textContent = '1';
+            supplierPrice.textContent = '-';
+            profitMargin.textContent = '-';
             totalAmount.textContent = '-';
         }
     }
 
     productSelect.addEventListener('change', updateOrderSummary);
     quantityInput.addEventListener('input', updateOrderSummary);
+    
+    // تحديث ملخص الطلب تلقائياً إذا كان هناك منتج محدد مسبقاً
+    if (productSelect.value) {
+        updateOrderSummary();
+    }
 });
 </script>
 @endsection 

@@ -18,10 +18,11 @@ class OrderController extends Controller
         return view('orders.index', compact('orders'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $products = Product::where('status', 'available')->with('supplier')->get();
-        return view('orders.create', compact('products'));
+        $selectedProductId = $request->query('product_id');
+        return view('orders.create', compact('products', 'selectedProductId'));
     }
 
     public function store(Request $request)
@@ -36,10 +37,18 @@ class OrderController extends Controller
         $product = Product::findOrFail($request->product_id);
         $user = Auth::user();
         
-        $subtotal = $product->price_per_box * $request->quantity;
+        // التأكد من أن المستخدم مسجل دخول
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول لإنشاء طلب.');
+        }
+        
+        // حساب السعر مع هامش الربح 20%
+        $supplier_price = $product->price_per_box * $request->quantity;
+        $profit_margin = $supplier_price * 0.20; // 20% هامش ربح
+        $customer_price = $supplier_price + $profit_margin;
+        
         $delivery_fee = 0; // يمكن تعديل هذا حسب منطق التوصيل
-        $commission = 0; // يمكن تعديل هذا حسب منطق العمولة
-        $total_amount = $subtotal + $delivery_fee + $commission;
+        $total_amount = $customer_price + $delivery_fee;
         
         $order = Order::create([
             'order_number' => 'ORD-' . time() . '-' . rand(1000, 9999),
@@ -48,29 +57,32 @@ class OrderController extends Controller
             'supplier_id' => $product->supplier_id,
             'quantity' => $request->quantity,
             'unit_price' => $product->price_per_box,
-            'subtotal' => $subtotal,
+            'subtotal' => $customer_price,
             'delivery_fee' => $delivery_fee,
-            'commission' => $commission,
+            'commission' => $profit_margin,
             'total_amount' => $total_amount,
             'delivery_address' => $request->delivery_address,
             'delivery_city' => $user->city ?? 'مكة المكرمة',
             'customer_phone' => $user->phone,
             'customer_name' => $user->name,
             'notes' => $request->delivery_notes,
-            'status' => 'pending',
+            'status' => 'pending_payment', // حالة جديدة: في انتظار الدفع
             'payment_status' => 'pending',
-            'payment_method' => 'cash',
+            'payment_method' => null, // سيتم تحديده عند الدفع
         ]);
 
-        return redirect()->route('orders.show', $order->id)
-            ->with('success', 'تم إنشاء الطلب بنجاح!');
+        // توجيه المستخدم إلى صفحة الدفع بدلاً من صفحة الطلب
+        return redirect()->route('payments.new-order', $order->id)
+            ->with('info', 'تم إنشاء الطلب بنجاح! يرجى إتمام عملية الدفع لتأكيد الطلب. رقم الطلب: ' . $order->order_number);
     }
 
     public function show(Order $order)
     {
-        // Ensure user can only view their own orders
-        if ($order->customer_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403, 'غير مصرح لك بعرض هذا الطلب.');
+        $user = Auth::user();
+        
+        // Ensure user can only view their own orders or is admin
+        if ($order->customer_id !== $user->id && $user->role !== 'admin') {
+            abort(403, 'غير مصرح لك بعرض هذا الطلب. هذا الطلب يخص مستخدم آخر.');
         }
 
         $order->load(['product', 'supplier', 'deliveryMan']);
@@ -80,8 +92,10 @@ class OrderController extends Controller
 
     public function track(Order $order)
     {
-        // Ensure user can only track their own orders
-        if ($order->customer_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $user = Auth::user();
+        
+        // Ensure user can only track their own orders or is admin
+        if ($order->customer_id !== $user->id && $user->role !== 'admin') {
             abort(403, 'غير مصرح لك بتتبع هذا الطلب.');
         }
 

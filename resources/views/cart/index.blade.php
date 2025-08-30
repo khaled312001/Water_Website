@@ -108,8 +108,8 @@
                         
                         <form action="{{ route('orders.create') }}" method="GET">
                             <button type="submit" class="btn btn-success btn-lg w-100">
-                                <i class="fas fa-check me-2"></i>
-                                إتمام الطلب
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                اطلب الآن
                             </button>
                         </form>
                         

@@ -395,6 +395,95 @@
             </div>
         </div>
     </div>
+
+    <!-- Pending Payments Section -->
+    @if($pendingPayments->count() > 0)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        الطلبات التي تحتاج تأكيد الدفع
+                    </h5>
+                    <a href="{{ route('admin.payments.pending') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-eye me-1"></i>
+                        عرض الكل ({{ $stats['pending_payments'] }})
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>رقم الطلب</th>
+                                <th>العميل</th>
+                                <th>المنتج</th>
+                                <th>طريقة الدفع</th>
+                                <th>المبلغ</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pendingPayments as $payment)
+                                <tr>
+                                    <td>
+                                        <strong>#{{ $payment->order->id }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ $payment->order->order_number }}</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ $payment->order->customer->name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ $payment->order->customer->phone }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if($payment->order->product->image)
+                                                <img src="{{ asset('storage/' . $payment->order->product->image) }}" 
+                                                     alt="{{ $payment->order->product->name }}" 
+                                                     class="rounded me-2" 
+                                                     style="width: 30px; height: 30px; object-fit: cover;">
+                                            @endif
+                                            <div>
+                                                <div class="fw-bold small">{{ $payment->order->product->name }}</div>
+                                                <small class="text-muted">الكمية: {{ $payment->order->quantity }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ $payment->payment_method_text }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-primary">{{ number_format($payment->amount, 2) }} ريال</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $payment->created_at->format('Y-m-d H:i') }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ $payment->created_at->diffForHumans() }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('admin.payments.pending') }}" class="btn btn-outline-success">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="{{ route('admin.orders.show', $payment->order->id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
 

@@ -627,6 +627,8 @@
                                     <li><a class="dropdown-item" href="{{ route('supplier.dashboard') }}">لوحة تحكم المورد</a></li>
                                 @elseif(auth()->user()->role === 'delivery')
                                     <li><a class="dropdown-item" href="{{ route('delivery.dashboard') }}">لوحة تحكم التوصيل</a></li>
+                                @elseif(auth()->user()->role === 'customer')
+                                    <li><a class="dropdown-item" href="{{ route('customer.dashboard') }}">لوحة تحكم العميل</a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>

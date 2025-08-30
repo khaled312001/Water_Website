@@ -104,6 +104,7 @@
                                     <th>المندوب</th>
                                     <th>السعر</th>
                                     <th>الحالة</th>
+                                    <th>حالة الدفع</th>
                                     <th>التاريخ</th>
                                     <th>الإجراءات</th>
                                 </tr>
@@ -133,27 +134,54 @@
                                         <div class="fw-bold">{{ $order->supplier->company_name ?? 'غير محدد' }}</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">{{ $order->deliveryMan->user->name ?? 'غير محدد' }}</div>
+                                        @if($order->deliveryMan)
+                                            <div class="fw-bold">{{ $order->deliveryMan->user->name ?? 'غير محدد' }}</div>
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                مخصص
+                                            </small>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-warning mt-1"
+                                                    onclick="changeDeliveryMan({{ $order->id }}, '{{ $order->deliveryMan->user->name ?? '' }}')"
+                                                    title="تغيير المندوب">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        @else
+                                            <select class="form-select form-select-sm delivery-man-select" 
+                                                    data-order-id="{{ $order->id }}"
+                                                    onchange="assignDeliveryMan({{ $order->id }}, this.value)">
+                                                <option value="">اختر مندوب التوصيل...</option>
+                                            </select>
+                                            <small class="text-warning">
+                                                <i class="fas fa-clock me-1"></i>
+                                                في انتظار التخصيص
+                                            </small>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="fw-bold text-success">{{ number_format($order->total_amount ?? 0, 2) }} ريال</span>
                                     </td>
                                     <td>
-                                        @php
-                                            $statusColors = [
-                                                'pending' => 'warning',
-                                                'confirmed' => 'info',
-                                                'preparing' => 'primary',
-                                                'assigned' => 'secondary',
-                                                'picked_up' => 'info',
-                                                'delivered' => 'success',
-                                                'cancelled' => 'danger'
-                                            ];
-                                            $statusColor = $statusColors[$order->status ?? 'pending'] ?? 'warning';
-                                        @endphp
-                                        <span class="badge-admin bg-{{ $statusColor }}">
-                                            {{ $order->status_text ?? 'في الانتظار' }}
-                                        </span>
+                                        <select class="form-select form-select-sm status-select" 
+                                                data-order-id="{{ $order->id }}"
+                                                onchange="updateOrderStatus({{ $order->id }}, this.value)">
+                                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>في الانتظار</option>
+                                            <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>مؤكد</option>
+                                            <option value="preparing" {{ $order->status === 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
+                                            <option value="assigned" {{ $order->status === 'assigned' ? 'selected' : '' }}>تم التعيين</option>
+                                            <option value="picked_up" {{ $order->status === 'picked_up' ? 'selected' : '' }}>تم الاستلام</option>
+                                            <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>تم التوصيل</option>
+                                            <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>ملغي</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm payment-status-select" 
+                                                data-order-id="{{ $order->id }}"
+                                                onchange="updatePaymentStatus({{ $order->id }}, this.value)">
+                                            <option value="pending" {{ $order->payment_status === 'pending' ? 'selected' : '' }}>في الانتظار</option>
+                                            <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>مدفوع</option>
+                                            <option value="failed" {{ $order->payment_status === 'failed' ? 'selected' : '' }}>فشل</option>
+                                        </select>
                                     </td>
                                     <td>
                                         <div class="fw-bold">{{ $order->created_at->format('Y-m-d') }}</div>
@@ -167,6 +195,15 @@
                                             <a href="{{ route('admin.orders.edit', $order->id) }}" class="btn btn-sm btn-outline-warning" title="تعديل">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            @if($order->status === 'confirmed' && !$order->delivery_man_id)
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-success" 
+                                                        title="إسناد لمندوب توصيل"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#assignModal{{ $order->id }}">
+                                                    <i class="fas fa-truck"></i>
+                                                </button>
+                                            @endif
                                             <form action="{{ route('admin.orders.delete', $order->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الطلب؟')">
                                                 @csrf
                                                 @method('DELETE')
@@ -199,4 +236,212 @@
         </div>
     </div>
 </div>
+
+<!-- Assign Delivery Man Modals -->
+@foreach($orders as $order)
+    @if($order->status === 'confirmed' && !$order->delivery_man_id)
+        <div class="modal fade" id="assignModal{{ $order->id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-truck me-2"></i>
+                            إسناد الطلب لمندوب توصيل
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ route('admin.orders.assign-delivery', $order->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <h6>تفاصيل الطلب:</h6>
+                                <p><strong>رقم الطلب:</strong> #{{ $order->order_number ?? $order->id }}</p>
+                                <p><strong>العميل:</strong> {{ $order->customer->name ?? 'غير محدد' }}</p>
+                                <p><strong>المنتج:</strong> {{ $order->product->name ?? 'غير محدد' }}</p>
+                                <p><strong>العنوان:</strong> {{ $order->delivery_address ?? 'غير محدد' }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="delivery_man_id{{ $order->id }}" class="form-label">اختر مندوب التوصيل:</label>
+                                <select class="form-select" id="delivery_man_id{{ $order->id }}" name="delivery_man_id" required>
+                                    <option value="">اختر مندوب التوصيل...</option>
+                                </select>
+                                <div class="form-text">سيتم عرض مندوبي التوصيل المتاحين فقط</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>
+                                إسناد الطلب
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
+
+@endsection
+
+@section('scripts')
+<script>
+// تحميل مندوبي التوصيل المتاحين عند فتح modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modals = document.querySelectorAll('[id^="assignModal"]');
+    
+    modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function() {
+            const orderId = this.id.replace('assignModal', '');
+            const select = this.querySelector('select[name="delivery_man_id"]');
+            
+            // تحميل مندوبي التوصيل المتاحين
+            fetch('{{ route("admin.delivery-men.available") }}')
+                .then(response => response.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">اختر مندوب التوصيل...</option>';
+                    
+                    data.forEach(deliveryMan => {
+                        const option = document.createElement('option');
+                        option.value = deliveryMan.id;
+                        option.textContent = `${deliveryMan.name} (${deliveryMan.phone}) - ${deliveryMan.current_orders} طلب حالياً`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading delivery men:', error);
+                    select.innerHTML = '<option value="">خطأ في تحميل البيانات</option>';
+                });
+        });
+    });
+
+    // تحميل مندوبي التوصيل في القوائم المنسدلة في الجدول
+    loadDeliveryMenInTable();
+});
+
+// دالة تحميل مندوبي التوصيل في الجدول
+function loadDeliveryMenInTable() {
+    const selects = document.querySelectorAll('.delivery-man-select');
+    console.log('Found delivery-man-select elements:', selects.length);
+    
+    selects.forEach(select => {
+        console.log('Loading delivery men for select:', select);
+        fetch('{{ route("admin.delivery-men.available") }}')
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Delivery men data:', data);
+                select.innerHTML = '<option value="">اختر مندوب التوصيل...</option>';
+                
+                if (data && data.length > 0) {
+                    data.forEach(deliveryMan => {
+                        const option = document.createElement('option');
+                        option.value = deliveryMan.id;
+                        option.textContent = `${deliveryMan.name} (${deliveryMan.phone})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">لا يوجد مندوبي توصيل متاحين</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading delivery men:', error);
+                select.innerHTML = '<option value="">خطأ في تحميل البيانات</option>';
+            });
+    });
+}
+
+// دالة إسناد مندوب التوصيل
+function assignDeliveryMan(orderId, deliveryManId) {
+    if (!deliveryManId) return;
+    
+    const formData = new FormData();
+    formData.append('delivery_man_id', deliveryManId);
+    formData.append('_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/orders/${orderId}/assign-delivery`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // تحديث الصف في الجدول
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء إسناد الطلب: ' + (data.message || 'خطأ غير معروف'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء إسناد الطلب');
+    });
+}
+
+// دالة تغيير مندوب التوصيل
+function changeDeliveryMan(orderId, currentDeliveryManName) {
+    const newDeliveryManId = prompt(`تغيير مندوب التوصيل للطلب #${orderId}\nالمندوب الحالي: ${currentDeliveryManName}\n\nأدخل معرف المندوب الجديد:`);
+    
+    if (newDeliveryManId && newDeliveryManId.trim()) {
+        assignDeliveryMan(orderId, newDeliveryManId.trim());
+    }
+}
+
+// دالة تحديث حالة الطلب
+function updateOrderStatus(orderId, newStatus) {
+    if (!newStatus) return;
+    
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    formData.append('_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/orders/${orderId}`, {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // تحديث الصف في الجدول
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء تحديث حالة الطلب: ' + (data.message || 'خطأ غير معروف'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث حالة الطلب');
+    });
+}
+
+// دالة تحديث حالة الدفع
+function updatePaymentStatus(orderId, newPaymentStatus) {
+    if (!newPaymentStatus) return;
+    
+    const formData = new FormData();
+    formData.append('payment_status', newPaymentStatus);
+    formData.append('_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/orders/${orderId}`, {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // تحديث الصف في الجدول
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء تحديث حالة الدفع: ' + (data.message || 'خطأ غير معروف'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث حالة الدفع');
+    });
+}
+</script>
 @endsection 
