@@ -16,7 +16,7 @@ tests
 phpunit.xml
 .editorconfig
 .styleci.yml
-package-lock.json
-yarn.lock
+package.json.backup
+vite.config.js.backup
 .DS_Store
 Thumbs.db 

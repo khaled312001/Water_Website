@@ -4,6 +4,20 @@
 
 **Vercel is primarily designed for frontend applications and has limited PHP support.** Deploying a full Laravel application on Vercel is challenging and not recommended for production use.
 
+## Current Vercel Configuration
+
+The project is now configured with:
+- `api/index.php` - Laravel bootstrap for serverless functions
+- `api/test.php` - Simple test endpoint
+- Proper routing configuration
+- Error handling for debugging
+
+## Testing the Deployment
+
+After deployment, you can test:
+1. **Basic PHP**: Visit `/test` to see if PHP is working
+2. **Laravel**: Visit the root URL to test Laravel bootstrap
+
 ## Recommended Deployment Platforms
 
 ### 1. **Railway** (Recommended)
@@ -35,10 +49,6 @@ If you want to use Vercel, consider this approach:
 1. **Backend**: Deploy Laravel API on Railway/Heroku
 2. **Frontend**: Deploy static assets on Vercel
 3. **Database**: Use external MySQL service
-
-## Current Vercel Configuration
-
-The current `vercel.json` is configured for basic PHP support, but it may not work reliably for a full Laravel application.
 
 ## Quick Railway Deployment
 
@@ -104,22 +114,41 @@ After deployment:
 
 ### Common Issues
 
-1. **Database Connection Issues**
+1. **"The pattern doesn't match any Serverless Functions"**
+   - Solution: The `api/index.php` file is now created and configured
+
+2. **"Vendor directory not found"**
+   - Solution: Ensure `composer install` runs during build
+   - Check that `vendor` directory is not in `.vercelignore`
+
+3. **Database Connection Issues**
    - Ensure your database credentials are correct
    - Make sure your database is accessible from your deployment platform
 
-2. **Asset Loading Issues**
+4. **Asset Loading Issues**
    - The build process builds assets to `public/build`
    - Ensure your web server is configured to serve static files
 
-3. **Permission Issues**
+5. **Permission Issues**
    - Make sure storage and bootstrap/cache directories are writable
    - Set proper file permissions
+
+### Vercel-Specific Issues
+
+1. **PHP Runtime Not Found**
+   - Vercel's PHP support is experimental
+   - Consider using Railway or Heroku instead
+
+2. **Laravel Bootstrap Fails**
+   - Check the `/test` endpoint first to verify PHP works
+   - Review error messages in the Laravel bootstrap
 
 ## File Structure
 
 The deployment uses these key files:
-- `vercel.json` - Vercel configuration (limited use)
+- `vercel.json` - Vercel configuration
+- `api/index.php` - Laravel serverless function
+- `api/test.php` - PHP test endpoint
 - `vite.config.js` - Asset building configuration
 - `package.json` - Node.js dependencies and scripts
 - `composer.json` - PHP dependencies
