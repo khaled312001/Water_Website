@@ -9,7 +9,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none">الرئيسية</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('suppliers') }}" class="text-decoration-none">الموردين</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('suppliers.index') }}" class="text-decoration-none">الموردين</a></li>
                 <li class="breadcrumb-item active" aria-current="page">{{ $supplier->company_name }}</li>
             </ol>
         </nav>
@@ -22,7 +22,7 @@
         <div class="row align-items-center">
             <div class="col-lg-8" data-aos="fade-right">
                 <div class="d-flex align-items-center mb-4">
-                    <img src="{{ $supplier->logo ? asset('storage/' . $supplier->logo) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
+                    <img src="{{ $supplier->user->profile_image ? asset('storage/' . $supplier->user->profile_image) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
                          class="rounded-circle me-4" alt="{{ $supplier->company_name }}" 
                          style="width: 120px; height: 120px; object-fit: cover;">
                     <div>
@@ -41,6 +41,22 @@
                 </div>
                 
                 <p class="lead text-muted mb-4">{{ $supplier->description }}</p>
+                
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">
+                        <i class="fas fa-user me-2"></i>
+                        معلومات المورد
+                    </h6>
+                    <p class="mb-2">
+                        <strong>الاسم:</strong> {{ $supplier->user->name }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>الرخصة التجارية:</strong> {{ $supplier->commercial_license }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>الرقم الضريبي:</strong> {{ $supplier->tax_number }}
+                    </p>
+                </div>
                 
                 <div class="row">
                     <div class="col-md-4 mb-3">
@@ -230,7 +246,7 @@
                 </div>
                 <h3 class="mb-3">لا توجد منتجات</h3>
                 <p class="text-muted mb-4">هذا المورد لا يملك منتجات متاحة حالياً</p>
-                <a href="{{ route('suppliers') }}" class="btn btn-primary">
+                                            <a href="{{ route('suppliers.index') }}" class="btn btn-primary">
                     <i class="fas fa-arrow-left me-2"></i>
                     العودة للموردين
                 </a>
@@ -359,7 +375,7 @@
                         <i class="fas fa-shopping-cart me-2"></i>
                         اطلب الآن
                     </a>
-                    <a href="{{ route('suppliers') }}" class="btn btn-outline-light btn-lg px-5 py-3">
+                    <a href="{{ route('suppliers.index') }}" class="btn btn-outline-light btn-lg px-5 py-3">
                         <i class="fas fa-store me-2"></i>
                         عرض جميع الموردين
                     </a>

@@ -38,7 +38,8 @@
                         <div class="text-center mb-4">
                             @if($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" 
-                                     class="img-fluid rounded" style="max-height: 300px;">
+                                     class="img-fluid rounded" style="max-height: 300px;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             @else
                                 <div class="bg-light rounded d-flex align-items-center justify-content-center" 
                                      style="height: 300px;">

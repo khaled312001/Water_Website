@@ -24,7 +24,8 @@
             <div class="col-lg-6 mb-4" data-aos="fade-right">
                 <div class="position-relative">
                     <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
-                         class="img-fluid rounded-4 shadow-lg" alt="{{ $product->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                         class="img-fluid rounded-4 shadow-lg" alt="{{ $product->name }}" style="width: 100%; height: 500px; object-fit: cover;"
+                         onerror="this.src='https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
                     
                     <!-- Floating Badges -->
                     @if($product->is_featured)

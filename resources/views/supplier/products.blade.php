@@ -19,10 +19,10 @@
                             <i class="fas fa-plus me-2"></i>
                             إضافة منتج جديد
                         </a>
-                        <button class="btn btn-supplier btn-outline-secondary">
-                            <i class="fas fa-download me-2"></i>
+                        <a href="{{ route('supplier.export.products') }}" class="btn btn-supplier btn-outline-success">
+                            <i class="fas fa-file-export me-2"></i>
                             تصدير البيانات
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,14 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="product-avatar me-3">
-                                            <i class="fas fa-box"></i>
+                                            @if($product->image)
+                                                <img src="{{ asset('storage/' . $product->image) }}" 
+                                                     alt="{{ $product->name }}" 
+                                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                            @else
+                                                <i class="fas fa-box"></i>
+                                            @endif
                                         </div>
                                         <div>
                                             <div class="fw-bold">{{ $product->name }}</div>

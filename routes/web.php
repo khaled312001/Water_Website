@@ -24,7 +24,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('contact.submit');
-Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers');
+Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers.index');
 
 // Supplier Routes (must be before supplier/{id} route)
 Route::middleware(['auth', 'supplier'])->group(function () {
@@ -38,6 +38,12 @@ Route::middleware(['auth', 'supplier'])->group(function () {
     Route::delete('/supplier/products/{id}', [AdminController::class, 'supplierDeleteProduct'])->name('supplier.products.delete');
     Route::get('/supplier/orders', [AdminController::class, 'supplierOrders'])->name('supplier.orders');
     Route::get('/supplier/earnings', [AdminController::class, 'supplierEarnings'])->name('supplier.earnings');
+    
+    // Supplier Export Routes
+    Route::get('/supplier/export/dashboard', [AdminController::class, 'exportSupplierDashboard'])->name('supplier.export.dashboard');
+    Route::get('/supplier/export/products', [AdminController::class, 'exportSupplierProducts'])->name('supplier.export.products');
+    Route::get('/supplier/export/orders', [AdminController::class, 'exportSupplierOrders'])->name('supplier.export.orders');
+    Route::get('/supplier/export/earnings', [AdminController::class, 'exportSupplierEarnings'])->name('supplier.export.earnings');
 });
 
 Route::get('/supplier/{id}', [HomeController::class, 'supplierDetails'])->name('supplier.details');
@@ -129,6 +135,15 @@ Route::middleware(['auth'])->group(function () {
         
         // Reports
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        
+        // Export Routes
+        Route::get('/export/dashboard', [AdminController::class, 'exportDashboard'])->name('export.dashboard');
+        Route::get('/export/users', [AdminController::class, 'exportUsers'])->name('export.users');
+        Route::get('/export/orders', [AdminController::class, 'exportOrders'])->name('export.orders');
+        Route::get('/export/products', [AdminController::class, 'exportProducts'])->name('export.products');
+        Route::get('/export/suppliers', [AdminController::class, 'exportSuppliers'])->name('export.suppliers');
+        Route::get('/export/delivery-men', [AdminController::class, 'exportDeliveryMen'])->name('export.delivery-men');
+        Route::get('/export/reviews', [AdminController::class, 'exportReviews'])->name('export.reviews');
     });
 
     // Test route without middleware
@@ -175,6 +190,11 @@ Route::middleware(['auth'])->group(function () {
     // Customer Routes
     Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
         Route::get('/dashboard', [HomeController::class, 'customerDashboard'])->name('dashboard');
+        
+        // Customer Export Routes
+        Route::get('/export/dashboard', [HomeController::class, 'exportCustomerDashboard'])->name('export.dashboard');
+        Route::get('/export/orders', [HomeController::class, 'exportCustomerOrders'])->name('export.orders');
+        Route::get('/export/profile', [HomeController::class, 'exportCustomerProfile'])->name('export.profile');
     });
 });
 

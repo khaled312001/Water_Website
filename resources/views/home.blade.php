@@ -160,7 +160,8 @@
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="position-relative overflow-hidden">
                         <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' }}" 
-                             class="card-img-top" alt="{{ $product->name }}" style="height: 250px; object-fit: cover;">
+                             class="card-img-top" alt="{{ $product->name }}" style="height: 250px; object-fit: cover;"
+                             onerror="this.src='https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'">
                         @if($product->is_featured)
                             <div class="position-absolute top-0 start-0 m-3">
                                 <span class="badge bg-warning text-dark px-3 py-2">
@@ -230,9 +231,10 @@
                 <div class="card h-100 text-center border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="position-relative mb-4">
-                            <img src="{{ $supplier->logo ? asset('storage/' . $supplier->logo) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
+                            <img src="{{ $supplier->user->profile_image ? asset('storage/' . $supplier->user->profile_image) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
                                  class="rounded-circle mb-3" alt="{{ $supplier->company_name }}" 
-                                 style="width: 100px; height: 100px; object-fit: cover;">
+                                 style="width: 100px; height: 100px; object-fit: cover;"
+                                 onerror="this.src='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'">
                             <div class="position-absolute top-0 end-0">
                                 <span class="badge bg-success">
                                     <i class="fas fa-check-circle me-1"></i>

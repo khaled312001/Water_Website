@@ -9,13 +9,39 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="stat-card">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon bg-primary text-white me-3">
-                        <i class="fas fa-store"></i>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary text-white me-3">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">مرحباً، {{ auth()->user()->name }}</h4>
+                            <p class="text-muted mb-0">مرحباً بك في لوحة تحكم المورد</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="mb-1">مرحباً، {{ auth()->user()->name }}</h4>
-                        <p class="text-muted mb-0">مرحباً بك في لوحة تحكم المورد</p>
+                    <div class="dropdown">
+                        <button class="btn btn-admin btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-export me-2"></i>
+                            تصدير البيانات
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('supplier.export.dashboard') }}">
+                                <i class="fas fa-chart-line me-2"></i>
+                                تصدير لوحة التحكم
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('supplier.export.products') }}">
+                                <i class="fas fa-box me-2"></i>
+                                تصدير المنتجات
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('supplier.export.orders') }}">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                تصدير الطلبات
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('supplier.export.earnings') }}">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                تصدير الأرباح
+                            </a></li>
+                        </ul>
                     </div>
                 </div>
             </div>

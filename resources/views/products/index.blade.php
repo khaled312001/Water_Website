@@ -97,7 +97,8 @@
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="position-relative overflow-hidden">
                             <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' }}" 
-                                 class="card-img-top" alt="{{ $product->name }}" style="height: 280px; object-fit: cover;">
+                                 class="card-img-top" alt="{{ $product->name }}" style="height: 280px; object-fit: cover;"
+                                 onerror="this.src='https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'">
                             
                             <!-- Badges -->
                             <div class="position-absolute top-0 start-0 m-3">

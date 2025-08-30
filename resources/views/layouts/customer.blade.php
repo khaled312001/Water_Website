@@ -552,7 +552,7 @@
                     <i class="fas fa-box"></i>
                     المنتجات
                 </a>
-                <a href="{{ route('suppliers') }}" class="nav-link {{ request()->routeIs('suppliers') ? 'active' : '' }}">
+                                        <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.index') ? 'active' : '' }}">
                     <i class="fas fa-store"></i>
                     الموردين
                 </a>

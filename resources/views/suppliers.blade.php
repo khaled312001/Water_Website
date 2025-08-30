@@ -12,6 +12,26 @@
                 <p class="lead mb-4">
                     تعامل مع أفضل موردين المياه المعتمدين والمرخصين في مكة المكرمة
                 </p>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h3 class="text-primary">{{ $suppliers->total() }}</h3>
+                            <p class="text-muted">مورد معتمد</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h3 class="text-success">{{ $suppliers->avg('rating') ? number_format($suppliers->avg('rating'), 1) : '4.5' }}</h3>
+                            <p class="text-muted">متوسط التقييم</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-item">
+                            <h3 class="text-info">{{ $suppliers->sum('total_orders') }}</h3>
+                            <p class="text-muted">طلب مكتمل</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-6 text-center">
                 <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
@@ -30,12 +50,16 @@
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card h-100">
                         <div class="card-body text-center">
-                            <img src="{{ $supplier->logo ? asset('storage/' . $supplier->logo) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
+                            <img src="{{ $supplier->user->profile_image ? asset('storage/' . $supplier->user->profile_image) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80' }}" 
                                  class="rounded-circle mb-3" alt="{{ $supplier->company_name }}" 
                                  style="width: 100px; height: 100px; object-fit: cover;">
                             
                             <h5 class="card-title">{{ $supplier->company_name }}</h5>
-                            <p class="card-text text-muted">{{ Str::limit($supplier->description, 120) }}</p>
+                            <p class="card-text text-muted mb-2">{{ Str::limit($supplier->description, 120) }}</p>
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-user me-1"></i>
+                                {{ $supplier->user->name }}
+                            </p>
                             
                             <div class="mb-3">
                                 <div class="text-warning">
@@ -63,6 +87,11 @@
                                 <small class="text-muted">
                                     <i class="fas fa-map-marker-alt me-1"></i>
                                     {{ $supplier->city }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-phone me-1"></i>
+                                    {{ $supplier->phone }}
                                 </small>
                             </div>
                             
@@ -123,4 +152,58 @@
         </div>
     </div>
 </section>
-@endsection 
+@endsection
+
+<style>
+.stat-item {
+    padding: 1rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    margin-bottom: 1rem;
+}
+
+.stat-item h3 {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 2rem;
+}
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+}
+
+.hero-section h1 {
+    color: white;
+}
+
+.hero-section .lead {
+    color: rgba(255, 255, 255, 0.9);
+}
+</style> 

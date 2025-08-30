@@ -14,9 +14,47 @@
                         <h4 class="mb-2">مرحباً {{ auth()->user()->name }} 👋</h4>
                         <p class="text-muted mb-0">إليك نظرة عامة على أداء النظام اليوم</p>
                     </div>
-                    <div class="text-end">
-                        <div class="text-muted">آخر تحديث</div>
-                        <div class="fw-bold">{{ now()->format('Y-m-d H:i') }}</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="text-end me-3">
+                            <div class="text-muted">آخر تحديث</div>
+                            <div class="fw-bold">{{ now()->format('Y-m-d H:i') }}</div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-admin btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-file-export me-2"></i>
+                                تصدير البيانات
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('admin.export.dashboard') }}">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    تصدير لوحة التحكم
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.users') }}">
+                                    <i class="fas fa-users me-2"></i>
+                                    تصدير المستخدمين
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.orders') }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    تصدير الطلبات
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.products') }}">
+                                    <i class="fas fa-box me-2"></i>
+                                    تصدير المنتجات
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.suppliers') }}">
+                                    <i class="fas fa-store me-2"></i>
+                                    تصدير الموردين
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.delivery-men') }}">
+                                    <i class="fas fa-truck me-2"></i>
+                                    تصدير مندوبي التوصيل
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.export.reviews') }}">
+                                    <i class="fas fa-star me-2"></i>
+                                    تصدير التقييمات
+                                </a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

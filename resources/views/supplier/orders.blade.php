@@ -15,10 +15,10 @@
                         <p class="text-muted mb-0">عرض وإدارة طلبات العملاء</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-admin btn-outline-secondary">
-                            <i class="fas fa-download me-2"></i>
+                        <a href="{{ route('supplier.export.orders') }}" class="btn btn-supplier btn-outline-success">
+                            <i class="fas fa-file-export me-2"></i>
                             تصدير البيانات
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

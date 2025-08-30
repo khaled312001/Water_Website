@@ -473,17 +473,71 @@
         }
 
         /* Pagination */
+        .pagination {
+            gap: 0.5rem;
+            margin: 0;
+        }
+
         .pagination .page-link {
             border-radius: var(--border-radius);
-            border: none;
-            margin: 0 0.2rem;
+            border: 2px solid #e2e8f0;
+            margin: 0;
             color: var(--primary-color);
             font-weight: 600;
+            padding: 0.75rem 1rem;
+            min-width: 45px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: var(--shadow-light);
+        }
+
+        .pagination .page-link:hover {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
         }
 
         .pagination .page-item.active .page-link {
             background: var(--gradient-primary);
             border-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f8f9fa;
+            color: #6c757d;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pagination .page-item.disabled .page-link:hover {
+            transform: none;
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Pagination Results Info */
+        .pagination-info {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-light);
+            border: 2px solid #e2e8f0;
+            margin-top: 1rem;
+        }
+
+        .pagination-info p {
+            margin: 0;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+
+        .pagination-info .fw-bold {
+            color: var(--primary-color);
         }
     </style>
 
@@ -522,7 +576,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('suppliers') }}">
+                        <a class="nav-link" href="{{ route('suppliers.index') }}">
                             <i class="fas fa-store me-1"></i>
                             الموردين
                         </a>
@@ -656,7 +710,7 @@
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="{{ route('home') }}">الرئيسية</a></li>
                         <li class="mb-2"><a href="{{ route('products.index') }}">المنتجات</a></li>
-                        <li class="mb-2"><a href="{{ route('suppliers') }}">الموردين</a></li>
+                        <li class="mb-2"><a href="{{ route('suppliers.index') }}">الموردين</a></li>
                         <li class="mb-2"><a href="{{ route('about') }}">عن الموقع</a></li>
                         <li class="mb-2"><a href="{{ route('contact') }}">اتصل بنا</a></li>
                     </ul>

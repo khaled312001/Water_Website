@@ -19,10 +19,10 @@
                             <i class="fas fa-plus me-2"></i>
                             إضافة مستخدم جديد
                         </a>
-                        <button class="btn btn-admin btn-outline-secondary">
-                            <i class="fas fa-download me-2"></i>
+                        <a href="{{ route('admin.export.users') }}" class="btn btn-admin btn-outline-success">
+                            <i class="fas fa-file-export me-2"></i>
                             تصدير البيانات
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

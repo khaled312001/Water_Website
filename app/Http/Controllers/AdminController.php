@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\DeliveryMan;
 use App\Models\Review;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -698,5 +699,728 @@ class AdminController extends Controller
         $product->delete();
 
         return redirect()->route('supplier.products')->with('success', 'تم حذف المنتج بنجاح');
+    }
+
+    // Export Methods for Admin Dashboard
+    public function exportDashboard()
+    {
+        $stats = [
+            'total_users' => User::count(),
+            'total_orders' => Order::count(),
+            'total_products' => Product::count(),
+            'total_suppliers' => Supplier::count(),
+            'total_delivery_men' => DeliveryMan::count(),
+            'total_reviews' => Review::count(),
+            'total_revenue' => Order::sum('total_amount'),
+            'new_users_this_month' => User::whereMonth('created_at', now()->month)->count(),
+            'new_orders_today' => Order::whereDate('created_at', today())->count(),
+            'active_suppliers' => Supplier::where('status', 'active')->count(),
+            'revenue_this_month' => Order::whereMonth('created_at', now()->month)->sum('total_amount'),
+        ];
+
+        $recentOrders = Order::with(['customer', 'product'])->latest()->take(10)->get();
+        $recentUsers = User::latest()->take(10)->get();
+        $recentSuppliers = Supplier::with('user')->latest()->take(10)->get();
+
+        $filename = 'admin_dashboard_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($stats, $recentOrders, $recentUsers, $recentSuppliers) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Dashboard Statistics
+            fputcsv($file, ['إحصائيات لوحة التحكم']);
+            fputcsv($file, ['إجمالي المستخدمين', $stats['total_users']]);
+            fputcsv($file, ['إجمالي الطلبات', $stats['total_orders']]);
+            fputcsv($file, ['إجمالي المنتجات', $stats['total_products']]);
+            fputcsv($file, ['إجمالي الموردين', $stats['total_suppliers']]);
+            fputcsv($file, ['إجمالي مندوبي التوصيل', $stats['total_delivery_men']]);
+            fputcsv($file, ['إجمالي التقييمات', $stats['total_reviews']]);
+            fputcsv($file, ['إجمالي الإيرادات', $stats['total_revenue']]);
+            fputcsv($file, ['المستخدمين الجدد هذا الشهر', $stats['new_users_this_month']]);
+            fputcsv($file, ['الطلبات الجديدة اليوم', $stats['new_orders_today']]);
+            fputcsv($file, ['الموردين النشطين', $stats['active_suppliers']]);
+            fputcsv($file, ['الإيرادات هذا الشهر', $stats['revenue_this_month']]);
+            fputcsv($file, []); // Empty row
+            
+            // Recent Orders
+            fputcsv($file, ['الطلبات الحديثة']);
+            fputcsv($file, ['رقم الطلب', 'اسم العميل', 'اسم المنتج', 'الكمية', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الطلب']);
+            
+            foreach ($recentOrders as $order) {
+                fputcsv($file, [
+                    $order->order_number ?? $order->id,
+                    $order->customer->name ?? 'غير محدد',
+                    $order->product->name ?? 'غير محدد',
+                    $order->quantity ?? 1,
+                    $order->total_amount ?? 0,
+                    $order->status_text ?? $order->status,
+                    $order->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fputcsv($file, []); // Empty row
+            
+            // Recent Users
+            fputcsv($file, ['المستخدمين الجدد']);
+            fputcsv($file, ['الاسم', 'البريد الإلكتروني', 'رقم الهاتف', 'الدور', 'تاريخ التسجيل']);
+            
+            foreach ($recentUsers as $user) {
+                fputcsv($file, [
+                    $user->name,
+                    $user->email,
+                    $user->phone ?? 'غير محدد',
+                    $user->role,
+                    $user->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fputcsv($file, []); // Empty row
+            
+            // Recent Suppliers
+            fputcsv($file, ['الموردين الجدد']);
+            fputcsv($file, ['اسم المورد', 'البريد الإلكتروني', 'رقم الهاتف', 'الحالة', 'تاريخ التسجيل']);
+            
+            foreach ($recentSuppliers as $supplier) {
+                fputcsv($file, [
+                    $supplier->user->name ?? 'غير محدد',
+                    $supplier->user->email ?? 'غير محدد',
+                    $supplier->user->phone ?? 'غير محدد',
+                    $supplier->status ?? 'غير محدد',
+                    $supplier->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportUsers()
+    {
+        $users = User::with(['supplier', 'deliveryMan'])->get();
+
+        $filename = 'users_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($users) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'الاسم',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'الدور',
+                'العنوان',
+                'المدينة',
+                'الحالة',
+                'تاريخ التسجيل',
+                'آخر تسجيل دخول'
+            ]);
+
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->name,
+                    $user->email,
+                    $user->phone ?? 'غير محدد',
+                    $user->role,
+                    $user->address ?? 'غير محدد',
+                    $user->city ?? 'غير محدد',
+                    $user->is_active ? 'نشط' : 'غير نشط',
+                    $user->created_at->format('Y-m-d H:i:s'),
+                    $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : 'لم يسجل دخول'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportOrders()
+    {
+        $orders = Order::with(['customer', 'product', 'supplier', 'deliveryMan'])->get();
+
+        $filename = 'orders_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($orders) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'رقم الطلب',
+                'اسم العميل',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'اسم المنتج',
+                'اسم المورد',
+                'مندوب التوصيل',
+                'الكمية',
+                'المبلغ الإجمالي',
+                'رسوم التوصيل',
+                'عنوان التوصيل',
+                'حالة الطلب',
+                'تاريخ الطلب',
+                'وقت التوصيل الفعلي'
+            ]);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->order_number ?? $order->id,
+                    $order->customer->name ?? 'غير محدد',
+                    $order->customer->email ?? 'غير محدد',
+                    $order->customer->phone ?? 'غير محدد',
+                    $order->product->name ?? 'غير محدد',
+                    $order->supplier->user->name ?? 'غير محدد',
+                    $order->deliveryMan->user->name ?? 'غير محدد',
+                    $order->quantity ?? 1,
+                    $order->total_amount ?? 0,
+                    $order->delivery_fee ?? 0,
+                    $order->delivery_address ?? 'غير محدد',
+                    $order->status_text ?? $order->status,
+                    $order->created_at->format('Y-m-d H:i:s'),
+                    $order->actual_delivery_time ? $order->actual_delivery_time->format('Y-m-d H:i:s') : 'لم يتم التوصيل'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportProducts()
+    {
+        $products = Product::with('supplier.user')->get();
+
+        $filename = 'products_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($products) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'اسم المنتج',
+                'الوصف',
+                'العلامة التجارية',
+                'الحجم',
+                'الكمية في الصندوق',
+                'السعر لكل صندوق',
+                'السعر لكل زجاجة',
+                'النوع',
+                'الكمية المتوفرة',
+                'اسم المورد',
+                'الحالة',
+                'تاريخ الإضافة'
+            ]);
+
+            foreach ($products as $product) {
+                fputcsv($file, [
+                    $product->name,
+                    $product->description,
+                    $product->brand,
+                    $product->size,
+                    $product->quantity_per_box,
+                    $product->price_per_box,
+                    $product->price_per_bottle,
+                    $product->type,
+                    $product->stock_quantity,
+                    $product->supplier->user->name ?? 'غير محدد',
+                    $product->status,
+                    $product->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportSuppliers()
+    {
+        $suppliers = Supplier::with('user')->get();
+
+        $filename = 'suppliers_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($suppliers) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'اسم المورد',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'العنوان',
+                'المدينة',
+                'الرقم الوطني',
+                'رقم السجل التجاري',
+                'الحالة',
+                'التقييم',
+                'عدد المنتجات',
+                'تاريخ التسجيل'
+            ]);
+
+            foreach ($suppliers as $supplier) {
+                fputcsv($file, [
+                    $supplier->user->name ?? 'غير محدد',
+                    $supplier->user->email ?? 'غير محدد',
+                    $supplier->user->phone ?? 'غير محدد',
+                    $supplier->user->address ?? 'غير محدد',
+                    $supplier->user->city ?? 'غير محدد',
+                    $supplier->national_id ?? 'غير محدد',
+                    $supplier->commercial_record ?? 'غير محدد',
+                    $supplier->status ?? 'غير محدد',
+                    $supplier->rating ?? 'غير محدد',
+                    $supplier->products_count ?? 0,
+                    $supplier->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportDeliveryMen()
+    {
+        $deliveryMen = DeliveryMan::with('user')->get();
+
+        $filename = 'delivery_men_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($deliveryMen) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'اسم مندوب التوصيل',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'الرقم الوطني',
+                'نوع المركبة',
+                'رقم المركبة',
+                'رقم الرخصة',
+                'جهة اتصال الطوارئ',
+                'رقم الطوارئ',
+                'الحالة',
+                'التقييم',
+                'إجمالي التوصيلات',
+                'إجمالي الأرباح',
+                'تاريخ التسجيل'
+            ]);
+
+            foreach ($deliveryMen as $deliveryMan) {
+                fputcsv($file, [
+                    $deliveryMan->user->name ?? 'غير محدد',
+                    $deliveryMan->user->email ?? 'غير محدد',
+                    $deliveryMan->user->phone ?? 'غير محدد',
+                    $deliveryMan->national_id ?? 'غير محدد',
+                    $deliveryMan->vehicle_type ?? 'غير محدد',
+                    $deliveryMan->vehicle_number ?? 'غير محدد',
+                    $deliveryMan->license_number ?? 'غير محدد',
+                    $deliveryMan->emergency_contact ?? 'غير محدد',
+                    $deliveryMan->emergency_phone ?? 'غير محدد',
+                    $deliveryMan->status ?? 'غير محدد',
+                    $deliveryMan->rating ?? 'غير محدد',
+                    $deliveryMan->total_deliveries ?? 0,
+                    $deliveryMan->total_earnings ?? 0,
+                    $deliveryMan->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportReviews()
+    {
+        $reviews = Review::with(['user', 'product'])->get();
+
+        $filename = 'reviews_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($reviews) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'اسم المستخدم',
+                'اسم المنتج',
+                'التقييم',
+                'التعليق',
+                'الحالة',
+                'تاريخ التقييم'
+            ]);
+
+            foreach ($reviews as $review) {
+                fputcsv($file, [
+                    $review->user->name ?? 'غير محدد',
+                    $review->product->name ?? 'غير محدد',
+                    $review->rating,
+                    $review->comment ?? 'لا يوجد تعليق',
+                    $review->status ?? 'غير محدد',
+                    $review->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // Export Methods for Supplier Dashboard
+    public function exportSupplierDashboard()
+    {
+        $supplier = auth()->user()->supplier;
+        
+        if (!$supplier) {
+            return redirect()->back()->with('error', 'Supplier profile not found.');
+        }
+
+        $stats = [
+            'total_products' => Product::where('supplier_id', $supplier->id)->count(),
+            'total_orders' => Order::where('supplier_id', $supplier->id)->count(),
+            'total_earnings' => Order::where('supplier_id', $supplier->id)->sum('total_amount'),
+            'pending_orders' => Order::where('supplier_id', $supplier->id)->whereIn('status', ['pending', 'confirmed'])->count(),
+            'completed_orders' => Order::where('supplier_id', $supplier->id)->where('status', 'delivered')->count(),
+            'monthly_earnings' => Order::where('supplier_id', $supplier->id)->whereMonth('created_at', Carbon::now()->month)->sum('total_amount'),
+        ];
+
+        $recentOrders = Order::where('supplier_id', $supplier->id)
+            ->with(['customer', 'product', 'deliveryMan'])
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $products = Product::where('supplier_id', $supplier->id)->get();
+
+        $filename = 'supplier_dashboard_' . $supplier->id . '_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($stats, $recentOrders, $products, $supplier) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Supplier Information
+            fputcsv($file, ['معلومات المورد']);
+            fputcsv($file, ['اسم المورد', auth()->user()->name]);
+            fputcsv($file, ['البريد الإلكتروني', auth()->user()->email]);
+            fputcsv($file, ['رقم الهاتف', auth()->user()->phone ?? 'غير محدد']);
+            fputcsv($file, ['الرقم الوطني', $supplier->national_id ?? 'غير محدد']);
+            fputcsv($file, ['رقم السجل التجاري', $supplier->commercial_record ?? 'غير محدد']);
+            fputcsv($file, ['الحالة', $supplier->status ?? 'غير محدد']);
+            fputcsv($file, []); // Empty row
+            
+            // Dashboard Statistics
+            fputcsv($file, ['إحصائيات لوحة التحكم']);
+            fputcsv($file, ['إجمالي المنتجات', $stats['total_products']]);
+            fputcsv($file, ['إجمالي الطلبات', $stats['total_orders']]);
+            fputcsv($file, ['إجمالي الأرباح', $stats['total_earnings']]);
+            fputcsv($file, ['الطلبات قيد الانتظار', $stats['pending_orders']]);
+            fputcsv($file, ['الطلبات المكتملة', $stats['completed_orders']]);
+            fputcsv($file, ['أرباح هذا الشهر', $stats['monthly_earnings']]);
+            fputcsv($file, []); // Empty row
+            
+            // Recent Orders
+            fputcsv($file, ['الطلبات الحديثة']);
+            fputcsv($file, ['رقم الطلب', 'اسم العميل', 'اسم المنتج', 'الكمية', 'المبلغ الإجمالي', 'مندوب التوصيل', 'الحالة', 'تاريخ الطلب']);
+            
+            foreach ($recentOrders as $order) {
+                fputcsv($file, [
+                    $order->order_number ?? $order->id,
+                    $order->customer->name ?? 'غير محدد',
+                    $order->product->name ?? 'غير محدد',
+                    $order->quantity ?? 1,
+                    $order->total_amount ?? 0,
+                    $order->deliveryMan->user->name ?? 'غير محدد',
+                    $order->status_text ?? $order->status,
+                    $order->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            
+            fputcsv($file, []); // Empty row
+            
+            // Products
+            fputcsv($file, ['المنتجات']);
+            fputcsv($file, ['اسم المنتج', 'العلامة التجارية', 'الحجم', 'السعر لكل صندوق', 'السعر لكل زجاجة', 'الكمية المتوفرة', 'الحالة']);
+            
+            foreach ($products as $product) {
+                fputcsv($file, [
+                    $product->name,
+                    $product->brand,
+                    $product->size,
+                    $product->price_per_box,
+                    $product->price_per_bottle,
+                    $product->stock_quantity,
+                    $product->status
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportSupplierProducts()
+    {
+        $supplier = auth()->user()->supplier;
+        
+        if (!$supplier) {
+            return redirect()->back()->with('error', 'Supplier profile not found.');
+        }
+
+        $products = Product::where('supplier_id', $supplier->id)->get();
+
+        $filename = 'supplier_products_' . $supplier->id . '_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($products) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'اسم المنتج',
+                'الوصف',
+                'العلامة التجارية',
+                'الحجم',
+                'الكمية في الصندوق',
+                'السعر لكل صندوق',
+                'السعر لكل زجاجة',
+                'النوع',
+                'الكمية المتوفرة',
+                'الحالة',
+                'تاريخ الإضافة',
+                'آخر تحديث'
+            ]);
+
+            foreach ($products as $product) {
+                fputcsv($file, [
+                    $product->name,
+                    $product->description,
+                    $product->brand,
+                    $product->size,
+                    $product->quantity_per_box,
+                    $product->price_per_box,
+                    $product->price_per_bottle,
+                    $product->type,
+                    $product->stock_quantity,
+                    $product->status,
+                    $product->created_at->format('Y-m-d H:i:s'),
+                    $product->updated_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportSupplierOrders()
+    {
+        $supplier = auth()->user()->supplier;
+        
+        if (!$supplier) {
+            return redirect()->back()->with('error', 'Supplier profile not found.');
+        }
+
+        $orders = Order::where('supplier_id', $supplier->id)
+            ->with(['customer', 'product', 'deliveryMan'])
+            ->get();
+
+        $filename = 'supplier_orders_' . $supplier->id . '_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($orders) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // CSV Headers
+            fputcsv($file, [
+                'رقم الطلب',
+                'اسم العميل',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'اسم المنتج',
+                'الكمية',
+                'المبلغ الإجمالي',
+                'رسوم التوصيل',
+                'عنوان التوصيل',
+                'مندوب التوصيل',
+                'حالة الطلب',
+                'تاريخ الطلب',
+                'وقت التوصيل الفعلي'
+            ]);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->order_number ?? $order->id,
+                    $order->customer->name ?? 'غير محدد',
+                    $order->customer->email ?? 'غير محدد',
+                    $order->customer->phone ?? 'غير محدد',
+                    $order->product->name ?? 'غير محدد',
+                    $order->quantity ?? 1,
+                    $order->total_amount ?? 0,
+                    $order->delivery_fee ?? 0,
+                    $order->delivery_address ?? 'غير محدد',
+                    $order->deliveryMan->user->name ?? 'غير محدد',
+                    $order->status_text ?? $order->status,
+                    $order->created_at->format('Y-m-d H:i:s'),
+                    $order->actual_delivery_time ? $order->actual_delivery_time->format('Y-m-d H:i:s') : 'لم يتم التوصيل'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportSupplierEarnings()
+    {
+        $supplier = auth()->user()->supplier;
+        
+        if (!$supplier) {
+            return redirect()->back()->with('error', 'Supplier profile not found.');
+        }
+
+        // Get earnings data
+        $todayEarnings = Order::where('supplier_id', $supplier->id)
+            ->whereDate('created_at', Carbon::today())
+            ->sum('total_amount');
+
+        $weekEarnings = Order::where('supplier_id', $supplier->id)
+            ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->sum('total_amount');
+
+        $monthEarnings = Order::where('supplier_id', $supplier->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('total_amount');
+
+        $earningsHistory = Order::where('supplier_id', $supplier->id)
+            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_earnings, COUNT(*) as orders_count')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->take(30)
+            ->get();
+
+        $filename = 'supplier_earnings_' . $supplier->id . '_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($todayEarnings, $weekEarnings, $monthEarnings, $earningsHistory) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Summary Section
+            fputcsv($file, ['ملخص الأرباح']);
+            fputcsv($file, ['أرباح اليوم', $todayEarnings]);
+            fputcsv($file, ['أرباح الأسبوع', $weekEarnings]);
+            fputcsv($file, ['أرباح الشهر', $monthEarnings]);
+            fputcsv($file, []); // Empty row
+            
+            // History Section
+            fputcsv($file, ['تاريخ', 'إجمالي الأرباح', 'عدد الطلبات', 'متوسط الطلب']);
+            
+            foreach ($earningsHistory as $earning) {
+                $avgOrder = $earning->orders_count > 0 ? $earning->total_earnings / $earning->orders_count : 0;
+                fputcsv($file, [
+                    $earning->date,
+                    $earning->total_earnings,
+                    $earning->orders_count,
+                    number_format($avgOrder, 2)
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

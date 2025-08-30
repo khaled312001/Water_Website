@@ -129,7 +129,8 @@
                             @if($product->image)
                                 <div class="mb-2">
                                     <img src="{{ asset('storage/' . $product->image) }}" alt="الصورة الحالية" 
-                                         class="img-thumbnail" style="max-height: 100px;">
+                                         class="img-thumbnail" style="max-height: 100px;"
+                                         onerror="this.src='https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'">
                                     <small class="form-text text-muted">الصورة الحالية</small>
                                 </div>
                             @endif

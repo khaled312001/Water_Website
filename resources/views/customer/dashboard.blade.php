@@ -14,6 +14,26 @@
                     <p class="text-muted mb-0">إليك نظرة عامة على نشاطك في سلسبيل مكة</p>
                 </div>
                 <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-customer btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-export me-2"></i>
+                            تصدير البيانات
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('customer.export.dashboard') }}">
+                                <i class="fas fa-chart-line me-2"></i>
+                                تصدير لوحة التحكم
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('customer.export.orders') }}">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                تصدير الطلبات
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('customer.export.profile') }}">
+                                <i class="fas fa-user me-2"></i>
+                                تصدير الملف الشخصي
+                            </a></li>
+                        </ul>
+                    </div>
                     <a href="{{ route('products.index') }}" class="btn btn-customer btn-primary">
                         <i class="fas fa-shopping-cart me-2"></i>
                         طلب مياه جديد
