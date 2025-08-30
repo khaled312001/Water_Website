@@ -1,23 +1,17 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.php",
-      "use": "vercel-php@0.6.0"
-    },
-    {
-      "src": "api/test.php",
-      "use": "vercel-php@0.6.0"
-    }
-  ],
   "routes": [
     {
+      "src": "/simple-test",
+      "dest": "/api/simple-test.js"
+    },
+    {
       "src": "/test",
-      "dest": "/api/test.php"
+      "dest": "/api/test.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/api/index.php"
+      "dest": "/api/index.js"
     }
   ]
 } 
