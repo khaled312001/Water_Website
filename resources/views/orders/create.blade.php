@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'إنشاء طلب جديد - مياه مكة')
+@section('title', 'إنشاء طلب جديد - سلسبيل مكة')
 
 @section('content')
 <div class="container py-5">
@@ -27,10 +27,10 @@
                                 <option value="">اختر المنتج</option>
                                 @foreach($products as $product)
                                     <option value="{{ $product->id }}" 
-                                            data-price="{{ $product->price }}"
+                                            data-price="{{ $product->price_per_box }}"
                                             data-supplier="{{ $product->supplier->company_name }}">
                                         {{ $product->name }} - {{ $product->supplier->company_name }} 
-                                        ({{ number_format($product->price, 2) }} ريال)
+                                        ({{ number_format($product->price_per_box, 2) }} ريال)
                                     </option>
                                 @endforeach
                             </select>

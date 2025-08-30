@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $supplier->company_name . ' - مياه مكة')
+@section('title', $supplier->company_name . ' - سلسبيل مكة')
 
 @section('content')
 <!-- Breadcrumb -->

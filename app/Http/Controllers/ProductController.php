@@ -47,8 +47,9 @@ class ProductController extends Controller
             ->paginate(12);
 
         $suppliers = Supplier::where('status', 'active')->get();
+        $query = $request->get('search');
 
-        return view('products.index', compact('products', 'suppliers'));
+        return view('products.index', compact('products', 'suppliers', 'query'));
     }
 
     public function show($id)
@@ -81,6 +82,8 @@ class ProductController extends Controller
             ->with('supplier')
             ->paginate(12);
 
-        return view('products.search', compact('products', 'query'));
+        $suppliers = Supplier::where('status', 'active')->get();
+
+        return view('products.index', compact('products', 'suppliers', 'query'));
     }
 }

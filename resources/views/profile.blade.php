@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الملف الشخصي - مياه مكة')
+@section('title', 'الملف الشخصي - سلسبيل مكة')
 
 @section('content')
 <div class="container py-5">
@@ -22,35 +22,65 @@
                         </div>
                     @endif
 
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if($errors->has('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ $errors->first('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
                             <div class="profile-avatar mb-3">
                                 @if(auth()->user()->profile_image)
                                     <img src="{{ asset('storage/' . auth()->user()->profile_image) }}" 
-                                         alt="الصورة الشخصية" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                                         alt="الصورة الشخصية" class="rounded-circle" id="profileImagePreview" style="width: 150px; height: 150px; object-fit: cover;">
                                 @else
                                     <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto" 
-                                         style="width: 150px; height: 150px; font-size: 3rem; color: white;">
+                                         id="profileImagePreview" style="width: 150px; height: 150px; font-size: 3rem; color: white;">
                                         {{ substr(auth()->user()->name, 0, 1) }}
                                     </div>
                                 @endif
                             </div>
                             
+                            <div class="mb-3">
+                                <label for="profile_image" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-camera me-1"></i>
+                                    تغيير الصورة
+                                </label>
+                                <input type="file" class="d-none" id="profile_image" name="profile_image" accept="image/*">
+                                <div id="imageInfo" class="mt-2" style="display: none;">
+                                    <small class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        تم اختيار صورة جديدة
+                                    </small>
+                                </div>
+                            </div>
+                            
                             <div class="role-badge mb-3">
-                                @if(auth()->user()->isAdmin())
+                                @if(auth()->user()->role === 'admin')
                                     <span class="badge bg-danger fs-6">
                                         <i class="fas fa-user-shield me-1"></i>
-                                        مدير
+                                        مدير النظام
                                     </span>
-                                @elseif(auth()->user()->isSupplier())
+                                @elseif(auth()->user()->role === 'supplier')
                                     <span class="badge bg-warning fs-6">
                                         <i class="fas fa-store me-1"></i>
                                         مورد
                                     </span>
-                                @elseif(auth()->user()->isDeliveryMan())
+                                @elseif(auth()->user()->role === 'delivery')
                                     <span class="badge bg-success fs-6">
                                         <i class="fas fa-truck me-1"></i>
-                                        مندوب
+                                        مندوب توصيل
                                     </span>
                                 @else
                                     <span class="badge bg-info fs-6">
@@ -58,6 +88,21 @@
                                         عميل
                                     </span>
                                 @endif
+                            </div>
+                            
+                            <div class="user-info text-center">
+                                <p class="mb-1">
+                                    <i class="fas fa-envelope me-1 text-muted"></i>
+                                    <small>{{ auth()->user()->email }}</small>
+                                </p>
+                                <p class="mb-1">
+                                    <i class="fas fa-phone me-1 text-muted"></i>
+                                    <small>{{ auth()->user()->phone }}</small>
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-map-marker-alt me-1 text-muted"></i>
+                                    <small>{{ auth()->user()->city }}</small>
+                                </p>
                             </div>
                         </div>
                         
@@ -130,18 +175,12 @@
                                     @enderror
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="profile_image" class="form-label fw-bold">
-                                        <i class="fas fa-camera me-1"></i>
-                                        الصورة الشخصية
-                                    </label>
-                                    <input type="file" class="form-control @error('profile_image') is-invalid @enderror" 
-                                           id="profile_image" name="profile_image" accept="image/*">
-                                    @error('profile_image')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text">يمكنك تحميل صورة شخصية (JPG, PNG, GIF)</div>
-                                </div>
+                                @error('profile_image')
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                                 
                                 <hr class="my-4">
                                 
@@ -177,9 +216,13 @@
                                 </div>
                                 
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button type="submit" class="btn btn-primary btn-lg">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                                         <i class="fas fa-save me-2"></i>
-                                        حفظ التغييرات
+                                        <span id="submitText">حفظ التغييرات</span>
+                                        <span id="loadingText" style="display: none;">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>
+                                            جاري الحفظ...
+                                        </span>
                                     </button>
                                 </div>
                             </form>
@@ -256,4 +299,74 @@
     padding: 0.75rem 1.5rem;
 }
 </style>
+
+<script>
+// Profile image preview functionality
+document.getElementById('profile_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('profileImagePreview');
+    const imageInfo = document.getElementById('imageInfo');
+    
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('يرجى اختيار ملف صورة صحيح');
+            return;
+        }
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Create new image element
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = 'معاينة الصورة';
+            img.className = 'rounded-circle';
+            img.style = 'width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--primary-color); box-shadow: var(--shadow-medium);';
+            
+            // Replace preview content
+            preview.innerHTML = '';
+            preview.appendChild(img);
+            imageInfo.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('profile_image');
+    const file = fileInput.files[0];
+    
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            e.preventDefault();
+            alert('يرجى اختيار ملف صورة صحيح');
+            return;
+        }
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            e.preventDefault();
+            alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
+            return;
+        }
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const loadingText = document.getElementById('loadingText');
+    
+    submitBtn.disabled = true;
+    submitText.style.display = 'none';
+    loadingText.style.display = 'inline';
+});
+</script>
 @endsection 

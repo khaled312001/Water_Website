@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة المنتجات - مياه مكة')
+@section('title', 'إدارة المنتجات - سلسبيل مكة')
 @section('page-title', 'إدارة المنتجات')
 
 @section('content')
@@ -122,7 +122,7 @@
                                         <small class="text-muted">{{ $product->supplier->user->name ?? '' }}</small>
                                     </td>
                                     <td>
-                                        <span class="fw-bold text-success">{{ number_format($product->price ?? 0, 2) }} ريال</span>
+                                        <span class="fw-bold text-success">{{ number_format($product->price_per_box ?? 0, 2) }} ريال</span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">

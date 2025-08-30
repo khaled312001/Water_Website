@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'مياه مكة - توصيل المياه في مكة المكرمة')</title>
+    <title>@yield('title', 'سلسبيل مكة - توصيل المياه في مكة المكرمة')</title>
     
     <!-- Bootstrap RTL CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -500,7 +500,7 @@
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">
                 <i class="fas fa-tint water-drop me-2"></i>
-                مياه مكة
+                سلسبيل مكة
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -556,12 +556,24 @@
                         
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>
+                                @if(auth()->user()->profile_image)
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_image) }}" alt="صورة المستخدم" class="rounded-circle me-1" style="width: 24px; height: 24px; object-fit: cover;">
+                                @else
+                                    <i class="fas fa-user me-1"></i>
+                                @endif
                                 {{ auth()->user()->name }}
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ route('profile') }}">الملف الشخصي</a></li>
                                 <li><a class="dropdown-item" href="{{ route('orders.index') }}">طلباتي</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                @if(auth()->user()->role === 'admin')
+                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">لوحة تحكم المدير</a></li>
+                                @elseif(auth()->user()->role === 'supplier')
+                                    <li><a class="dropdown-item" href="{{ route('supplier.dashboard') }}">لوحة تحكم المورد</a></li>
+                                @elseif(auth()->user()->role === 'delivery')
+                                    <li><a class="dropdown-item" href="{{ route('delivery.dashboard') }}">لوحة تحكم التوصيل</a></li>
+                                @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
@@ -622,7 +634,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <h5><i class="fas fa-tint water-drop me-2"></i>مياه مكة</h5>
+                    <h5><i class="fas fa-tint water-drop me-2"></i>سلسبيل مكة</h5>
                     <p class="mb-3">أفضل منصة لتوصيل المياه في مكة المكرمة. نوصل لك المياه العذبة والنقية مباشرة لباب بيتك.</p>
                     <div class="d-flex gap-2">
                         <a href="#" class="btn btn-outline-light btn-sm">
@@ -673,7 +685,7 @@
             </div>
             <hr class="my-4">
             <div class="text-center">
-                <p class="mb-0">&copy; {{ date('Y') }} مياه مكة. جميع الحقوق محفوظة.</p>
+                <p class="mb-0">&copy; {{ date('Y') }} سلسبيل مكة. جميع الحقوق محفوظة.</p>
             </div>
         </div>
     </footer>

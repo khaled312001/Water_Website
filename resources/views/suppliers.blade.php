@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الموردين - مياه مكة')
+@section('title', 'الموردين - سلسبيل مكة')
 
 @section('content')
 <!-- Hero Section -->

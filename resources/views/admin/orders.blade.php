@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الطلبات - مياه مكة')
+@section('title', 'إدارة الطلبات - سلسبيل مكة')
 @section('page-title', 'إدارة الطلبات')
 
 @section('content')

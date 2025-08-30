@@ -23,6 +23,7 @@ Route::post('/api/detect-role', [AuthController::class, 'detectRole'])->name('ap
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('contact.submit');
 Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers');
 Route::get('/supplier/{id}', [HomeController::class, 'supplierDetails'])->name('supplier.details');
 
@@ -133,5 +134,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/status', [DeliveryController::class, 'updateStatus'])->name('update-status');
         Route::get('/earnings', [DeliveryController::class, 'earnings'])->name('earnings');
         Route::get('/profile', [DeliveryController::class, 'profile'])->name('profile');
+    });
+
+    // Customer Routes
+    Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
+        Route::get('/dashboard', [HomeController::class, 'customerDashboard'])->name('dashboard');
     });
 }); 

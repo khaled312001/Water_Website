@@ -129,6 +129,8 @@ class AuthController extends Controller
                     return redirect()->route('supplier.dashboard')->with('success', 'مرحباً بك في لوحة تحكم المورد');
                 case 'delivery':
                     return redirect()->route('delivery.dashboard')->with('success', 'مرحباً بك في لوحة تحكم المندوب');
+                case 'customer':
+                    return redirect()->route('customer.dashboard')->with('success', 'مرحباً بك في لوحة تحكم العميل');
                 default:
                     return redirect()->intended('/')->with('success', 'تم تسجيل الدخول بنجاح');
             }
@@ -237,40 +239,52 @@ class AuthController extends Controller
             'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'current_password' => ['nullable', 'required_with:new_password'],
             'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ], [
+            'profile_image.image' => 'يجب أن يكون الملف صورة صحيحة.',
+            'profile_image.mimes' => 'يجب أن تكون الصورة من نوع: jpeg, png, jpg, gif.',
+            'profile_image.max' => 'حجم الصورة يجب أن يكون أقل من 2 ميجابايت.',
+            'current_password.required_with' => 'كلمة المرور الحالية مطلوبة عند تغيير كلمة المرور.',
+            'new_password.min' => 'كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.',
+            'new_password.confirmed' => 'تأكيد كلمة المرور الجديدة غير متطابق.',
         ]);
 
-        // Update basic information
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'city' => $request->city,
-            'address' => $request->address,
-        ];
+        try {
+            // Update basic information
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'city' => $request->city,
+                'address' => $request->address,
+            ];
 
-        // Handle profile image upload
-        if ($request->hasFile('profile_image')) {
-            // Delete old image if exists
-            if ($user->profile_image) {
-                Storage::disk('public')->delete($user->profile_image);
+            // Handle profile image upload
+            if ($request->hasFile('profile_image')) {
+                // Delete old image if exists
+                if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+                    Storage::disk('public')->delete($user->profile_image);
+                }
+                
+                // Store new image
+                $imagePath = $request->file('profile_image')->store('profile-images', 'public');
+                $updateData['profile_image'] = $imagePath;
             }
-            
-            $imagePath = $request->file('profile_image')->store('profile-images', 'public');
-            $updateData['profile_image'] = $imagePath;
-        }
 
-        // Handle password change
-        if ($request->filled('current_password') && $request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة.']);
+            // Handle password change
+            if ($request->filled('current_password') && $request->filled('new_password')) {
+                if (!Hash::check($request->current_password, $user->password)) {
+                    return back()->withErrors(['current_password' => 'كلمة المرور الحالية غير صحيحة.']);
+                }
+                
+                $updateData['password'] = Hash::make($request->new_password);
             }
-            
-            $updateData['password'] = Hash::make($request->new_password);
+
+            // Update user data
+            User::where('id', $user->id)->update($updateData);
+
+            return back()->with('success', 'تم تحديث الملف الشخصي بنجاح.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'حدث خطأ أثناء تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.']);
         }
-
-        // Update user data
-        User::where('id', $user->id)->update($updateData);
-
-        return back()->with('success', 'تم تحديث الملف الشخصي بنجاح.');
     }
 } 

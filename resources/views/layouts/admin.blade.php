@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'لوحة التحكم - مياه مكة')</title>
+    <title>@yield('title', 'لوحة التحكم - سلسبيل مكة')</title>
     
     <!-- Bootstrap RTL CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -50,18 +50,24 @@
             z-index: 1000;
             transition: all 0.3s ease;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .sidebar-header {
             padding: 1.5rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             text-align: center;
+            position: relative;
         }
 
         .sidebar-header h3 {
             margin: 0;
             font-weight: 600;
             font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .sidebar-header p {
@@ -70,15 +76,55 @@
             font-size: 0.875rem;
         }
 
+        .sidebar-close {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
         .sidebar-menu {
             padding: 1rem 0;
             overflow-y: auto;
             height: calc(100vh - 200px);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
         }
 
         .sidebar-menu .nav-link {
             color: rgba(255,255,255,0.8);
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.5rem;
             display: flex;
             align-items: center;
             transition: all 0.3s ease;
@@ -86,19 +132,42 @@
             background: transparent;
             width: 100%;
             text-align: right;
+            position: relative;
+            margin: 0.25rem 0;
         }
 
         .sidebar-menu .nav-link:hover,
         .sidebar-menu .nav-link.active {
             color: white;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             transform: translateX(-5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-menu .nav-link.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            border-radius: 0 2px 2px 0;
         }
 
         .sidebar-menu .nav-link i {
             margin-left: 0.75rem;
             width: 20px;
             text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-menu .nav-link .badge {
+            margin-right: auto;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
         }
 
         .sidebar-footer {
@@ -108,6 +177,25 @@
             padding: 1rem 1.5rem;
             border-top: 1px solid rgba(255,255,255,0.1);
             background: rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Main Content */
@@ -269,8 +357,14 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+
             .admin-sidebar {
                 transform: translateX(100%);
+                width: 100%;
+                max-width: 320px;
             }
 
             .admin-sidebar.show {
@@ -279,10 +373,93 @@
 
             .admin-main {
                 margin-right: 0;
+                padding-bottom: 80px; /* Space for mobile nav */
             }
 
             .sidebar-toggle {
+                display: block !important;
+            }
+
+            .sidebar-close {
+                display: flex !important;
+            }
+
+            .sidebar-header h3 {
+                font-size: 1.1rem;
+            }
+
+            .sidebar-menu .nav-link {
+                padding: 1rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .sidebar-menu .nav-link i {
+                font-size: 1.2rem;
+            }
+
+            /* Mobile Bottom Navigation */
+            .mobile-nav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 1px solid #e2e8f0;
+                z-index: 1000;
+                padding: 0.5rem 0;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            }
+
+            .mobile-nav .nav-link {
+                flex: 1;
+                text-align: center;
+                padding: 0.5rem;
+                color: #64748b;
+                text-decoration: none;
+                font-size: 0.75rem;
+                transition: all 0.3s ease;
+            }
+
+            .mobile-nav .nav-link.active {
+                color: var(--primary-color);
+            }
+
+            .mobile-nav .nav-link i {
                 display: block;
+                font-size: 1.2rem;
+                margin-bottom: 0.25rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .admin-sidebar {
+                width: 100%;
+                max-width: none;
+            }
+
+            .sidebar-header {
+                padding: 1rem;
+            }
+
+            .sidebar-menu {
+                padding: 0.5rem 0;
+            }
+
+            .sidebar-menu .nav-link {
+                padding: 0.875rem 1rem;
+            }
+
+            .sidebar-footer {
+                padding: 0.75rem 1rem;
+            }
+
+            .mobile-nav .nav-link {
+                font-size: 0.7rem;
+            }
+
+            .mobile-nav .nav-link i {
+                font-size: 1.1rem;
             }
         }
 
@@ -344,10 +521,16 @@
     </style>
 </head>
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
-    <div class="admin-sidebar">
+    <div class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-header">
-            <h3><i class="fas fa-tint me-2"></i>مياه مكة</h3>
+            <button class="sidebar-close" id="sidebarClose">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3><i class="fas fa-tint me-2"></i>سلسبيل مكة</h3>
             <p>نظام إدارة المياه</p>
         </div>
         
@@ -392,7 +575,19 @@
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <small class="d-block opacity-75">{{ auth()->user()->name }}</small>
-                    <small class="d-block opacity-50">مدير النظام</small>
+                    <small class="d-block opacity-50">
+                        @if(auth()->user()->role === 'admin')
+                            مدير النظام
+                        @elseif(auth()->user()->role === 'supplier')
+                            مورد
+                        @elseif(auth()->user()->role === 'delivery')
+                            مندوب توصيل
+                        @elseif(auth()->user()->role === 'customer')
+                            عميل
+                        @else
+                            مستخدم
+                        @endif
+                    </small>
                 </div>
                 <a href="{{ route('logout') }}" class="btn btn-outline-light btn-sm" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fas fa-sign-out-alt"></i>
@@ -413,13 +608,33 @@
             </div>
             
             <div class="header-right">
+                <a href="{{ route('home') }}" class="btn btn-outline-primary me-3" title="الذهاب إلى الموقع">
+                    <i class="fas fa-external-link-alt me-1"></i>
+                    الذهاب إلى الموقع
+                </a>
                 <div class="user-info">
                     <div class="user-avatar">
-                        {{ substr(auth()->user()->name, 0, 1) }}
+                        @if(auth()->user()->profile_image)
+                            <img src="{{ asset('storage/' . auth()->user()->profile_image) }}" alt="صورة المستخدم" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                        @else
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        @endif
                     </div>
                     <div>
                         <div class="fw-bold">{{ auth()->user()->name }}</div>
-                        <small class="text-muted">مدير النظام</small>
+                        <small class="text-muted">
+                            @if(auth()->user()->role === 'admin')
+                                مدير النظام
+                            @elseif(auth()->user()->role === 'supplier')
+                                مورد
+                            @elseif(auth()->user()->role === 'delivery')
+                                مندوب توصيل
+                            @elseif(auth()->user()->role === 'customer')
+                                عميل
+                            @else
+                                مستخدم
+                            @endif
+                        </small>
                     </div>
                 </div>
             </div>
@@ -449,6 +664,30 @@
         </main>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav d-none">
+        <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <i class="fas fa-tachometer-alt"></i>
+            الرئيسية
+        </a>
+        <a href="{{ route('admin.orders') }}" class="nav-link {{ request()->routeIs('admin.orders') ? 'active' : '' }}">
+            <i class="fas fa-shopping-cart"></i>
+            الطلبات
+        </a>
+        <a href="{{ route('admin.products') }}" class="nav-link {{ request()->routeIs('admin.products') ? 'active' : '' }}">
+            <i class="fas fa-box"></i>
+            المنتجات
+        </a>
+        <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+            <i class="fas fa-users"></i>
+            المستخدمين
+        </a>
+        <a href="{{ route('home') }}" class="nav-link">
+            <i class="fas fa-home"></i>
+            الموقع
+        </a>
+    </nav>
+
     <!-- Logout Form -->
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
         @csrf
@@ -458,27 +697,94 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Sidebar toggle for mobile
-        document.querySelector('.sidebar-toggle')?.addEventListener('click', function() {
-            document.querySelector('.admin-sidebar').classList.toggle('show');
+        // Enhanced sidebar functionality
+        const sidebar = document.getElementById('adminSidebar');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Toggle sidebar
+        sidebarToggle?.addEventListener('click', function() {
+            sidebar.classList.add('show');
+            sidebarOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close sidebar
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        sidebarClose?.addEventListener('click', closeSidebar);
+        sidebarOverlay?.addEventListener('click', closeSidebar);
+
+        // Close sidebar on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                closeSidebar();
+            }
         });
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 768) {
-                const sidebar = document.querySelector('.admin-sidebar');
-                const toggle = document.querySelector('.sidebar-toggle');
-                
-                if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-                    sidebar.classList.remove('show');
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    closeSidebar();
                 }
             }
         });
 
-        // Add fade-in animation to content
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+            
+            // Show/hide mobile navigation
+            const mobileNav = document.querySelector('.mobile-nav');
+            if (window.innerWidth <= 768) {
+                mobileNav.classList.remove('d-none');
+            } else {
+                mobileNav.classList.add('d-none');
+            }
+        });
+
+        // Initialize mobile navigation visibility
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('.admin-content').classList.add('fade-in');
+            
+            // Show/hide mobile navigation on load
+            const mobileNav = document.querySelector('.mobile-nav');
+            if (window.innerWidth <= 768) {
+                mobileNav.classList.remove('d-none');
+            }
+            
+            // Add hover effects to menu items
+            const menuItems = document.querySelectorAll('.sidebar-menu .nav-link');
+            menuItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(-5px) scale(1.02)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                });
+            });
         });
+
+        // Add notification badges (example)
+        function addNotificationBadge(menuItem, count) {
+            const badge = document.createElement('span');
+            badge.className = 'badge';
+            badge.textContent = count;
+            menuItem.appendChild(badge);
+        }
+
+        // Example: Add notification badges to menu items
+        // addNotificationBadge(document.querySelector('a[href*="orders"]'), 5);
+        // addNotificationBadge(document.querySelector('a[href*="reviews"]'), 3);
     </script>
 
     @yield('scripts')

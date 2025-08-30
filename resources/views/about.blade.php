@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'عن الموقع - مياه مكة')
+@section('title', 'عن الموقع - سلسبيل مكة')
 
 @section('content')
 <!-- Hero Section -->
@@ -8,7 +8,7 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">عن مياه مكة</h1>
+                <h1 class="display-4 fw-bold mb-4">عن سلسبيل مكة</h1>
                 <p class="lead mb-4">
                     منصة رائدة في توصيل المياه العذبة والنقية في مكة المكرمة. 
                     نربط بين أفضل الموردين والعملاء مع ضمان الجودة والسرعة.

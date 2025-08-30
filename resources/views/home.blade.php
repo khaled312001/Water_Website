@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'مياه مكة - توصيل المياه في مكة المكرمة')
+@section('title', 'سلسبيل مكة - توصيل المياه في مكة المكرمة')
 
 @section('content')
 <!-- Hero Section -->
@@ -10,7 +10,7 @@
             <div class="col-lg-6" data-aos="fade-right">
                 <h1 class="display-3 fw-bold mb-4">
                     <i class="fas fa-tint water-drop me-3"></i>
-                    مياه مكة
+                    سلسبيل مكة
                 </h1>
                 <h2 class="h2 mb-4 fw-light">أفضل منصة لتوصيل المياه العذبة في مكة المكرمة</h2>
                 <p class="lead mb-4 opacity-90">
@@ -103,7 +103,7 @@
 <section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5" data-aos="fade-up">
-            <h2 class="display-5 fw-bold mb-3">لماذا تختار مياه مكة؟</h2>
+            <h2 class="display-5 fw-bold mb-3">لماذا تختار سلسبيل مكة؟</h2>
             <p class="lead text-muted">نقدم لك أفضل خدمة توصيل المياه في مكة المكرمة</p>
         </div>
         

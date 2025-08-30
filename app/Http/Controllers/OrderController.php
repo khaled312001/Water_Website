@@ -20,7 +20,7 @@ class OrderController extends Controller
 
     public function create()
     {
-        $products = Product::where('is_active', true)->with('supplier')->get();
+        $products = Product::where('status', 'available')->with('supplier')->get();
         return view('orders.create', compact('products'));
     }
 
@@ -34,18 +34,32 @@ class OrderController extends Controller
         ]);
 
         $product = Product::findOrFail($request->product_id);
+        $user = Auth::user();
+        
+        $subtotal = $product->price_per_box * $request->quantity;
+        $delivery_fee = 0; // يمكن تعديل هذا حسب منطق التوصيل
+        $commission = 0; // يمكن تعديل هذا حسب منطق العمولة
+        $total_amount = $subtotal + $delivery_fee + $commission;
         
         $order = Order::create([
-            'customer_id' => Auth::id(),
+            'order_number' => 'ORD-' . time() . '-' . rand(1000, 9999),
+            'customer_id' => $user->id,
             'product_id' => $request->product_id,
             'supplier_id' => $product->supplier_id,
             'quantity' => $request->quantity,
-            'unit_price' => $product->price,
-            'total_amount' => $product->price * $request->quantity,
+            'unit_price' => $product->price_per_box,
+            'subtotal' => $subtotal,
+            'delivery_fee' => $delivery_fee,
+            'commission' => $commission,
+            'total_amount' => $total_amount,
             'delivery_address' => $request->delivery_address,
-            'delivery_notes' => $request->delivery_notes,
+            'delivery_city' => $user->city ?? 'مكة المكرمة',
+            'customer_phone' => $user->phone,
+            'customer_name' => $user->name,
+            'notes' => $request->delivery_notes,
             'status' => 'pending',
             'payment_status' => 'pending',
+            'payment_method' => 'cash',
         ]);
 
         return redirect()->route('orders.show', $order->id)

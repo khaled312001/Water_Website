@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تسجيل الدخول - مياه مكة')
+@section('title', 'تسجيل الدخول - سلسبيل مكة')
 
 @section('content')
 <div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: var(--gradient-primary);">
@@ -12,7 +12,7 @@
                         <div class="text-center mb-4">
                             <h2 class="fw-bold text-primary mb-2">
                                 <i class="fas fa-tint water-drop me-2"></i>
-                                مياه مكة
+                                سلسبيل مكة
                             </h2>
                             <p class="text-muted">تسجيل الدخول إلى حسابك</p>
                         </div>
