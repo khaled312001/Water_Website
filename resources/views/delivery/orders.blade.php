@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.delivery')
 
 @section('title', 'إدارة الطلبات - سلسبيل مكة')
 @section('page-title', 'إدارة الطلبات')
@@ -77,6 +77,16 @@
                         <i class="fas fa-shopping-cart text-info me-2"></i>
                         قائمة الطلبات ({{ $orders->total() }})
                     </h5>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('delivery.export.orders') }}" class="btn btn-delivery btn-outline-success">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير التقرير
+                        </a>
+                        <button class="btn btn-delivery btn-outline-info" onclick="updateLocation()">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            تحديث الموقع
+                        </button>
+                    </div>
                 </div>
 
                 @if($orders->count() > 0)
@@ -206,6 +216,81 @@ function updateOrderStatus(orderId, status) {
             alert('حدث خطأ أثناء تحديث حالة الطلب');
         });
     }
+}
+</script>
+<script>
+// Location update functionality
+function updateLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            fetch('/delivery/location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    lat: lat,
+                    lng: lng
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('تم تحديث الموقع بنجاح', 'success');
+                } else {
+                    showNotification('حدث خطأ أثناء تحديث الموقع', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('حدث خطأ أثناء تحديث الموقع', 'error');
+            });
+        }, function(error) {
+            let errorMessage = 'لا يمكن تحديد موقعك';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'يرجى السماح بالوصول إلى الموقع';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'معلومات الموقع غير متاحة';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'انتهت مهلة تحديد الموقع';
+                    break;
+            }
+            showNotification(errorMessage, 'error');
+        });
+    } else {
+        showNotification('متصفحك لا يدعم تحديد الموقع', 'error');
+    }
+}
+
+// Show notification function
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas ${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 </script>
 @endsection 

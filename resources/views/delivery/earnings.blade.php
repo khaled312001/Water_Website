@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.delivery')
 
 @section('title', 'تقارير الأرباح - سلسبيل مكة')
 @section('page-title', 'تقارير الأرباح')
@@ -15,10 +15,10 @@
                         <p class="text-muted mb-0">عرض إحصائيات الأرباح والإيرادات</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-admin btn-outline-secondary">
+                        <a href="{{ route('delivery.export.earnings') }}" class="btn btn-delivery btn-outline-success">
                             <i class="fas fa-download me-2"></i>
                             تصدير التقرير
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                     </h5>
                 </div>
 
-                @if($earnings->count() > 0)
+                @if($earningsHistory->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -121,25 +121,25 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($earnings as $earning)
+                            @foreach($earningsHistory as $earning)
                             <tr>
                                 <td>
                                     <div class="fw-bold">{{ \Carbon\Carbon::parse($earning->date)->format('Y-m-d') }}</div>
                                     <small class="text-muted">{{ \Carbon\Carbon::parse($earning->date)->format('l') }}</small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">{{ $earning->delivery_count ?? 0 }}</div>
+                                    <div class="fw-bold">{{ $earning->deliveries ?? 0 }}</div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-success">{{ number_format($earning->daily_earnings ?? 0, 2) }} ريال</div>
+                                    <div class="fw-bold text-success">{{ number_format($earning->total_earnings ?? 0, 2) }} ريال</div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-primary">{{ $earning->delivery_count > 0 ? number_format(($earning->daily_earnings ?? 0) / $earning->delivery_count, 2) : 0 }} ريال</div>
+                                    <div class="fw-bold text-primary">{{ $earning->deliveries > 0 ? number_format(($earning->total_earnings ?? 0) / $earning->deliveries, 2) : 0 }} ريال</div>
                                 </td>
                                 <td>
-                                    @if(($earning->daily_earnings ?? 0) > 100)
+                                    @if(($earning->total_earnings ?? 0) > 100)
                                         <span class="badge bg-success">ممتاز</span>
-                                    @elseif(($earning->daily_earnings ?? 0) > 50)
+                                    @elseif(($earning->total_earnings ?? 0) > 50)
                                         <span class="badge bg-warning">جيد</span>
                                     @else
                                         <span class="badge bg-info">عادي</span>
@@ -153,7 +153,7 @@
 
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $earnings->links() }}
+                    {{ $earningsHistory->links() }}
                 </div>
                 @else
                 <div class="text-center py-5">
@@ -179,21 +179,31 @@
                 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1">
-                        <span>معدل التوصيل اليومي</span>
-                        <span class="fw-bold">{{ $avgDailyDeliveries ?? 0 }}</span>
+                        <span>أرباح اليوم</span>
+                        <span class="fw-bold">{{ number_format($todayEarnings, 2) }} ريال</span>
                     </div>
                     <div class="progress" style="height: 8px;">
-                        <div class="progress-bar bg-primary" style="width: {{ min(($avgDailyDeliveries ?? 0) * 10, 100) }}%"></div>
+                        <div class="progress-bar bg-primary" style="width: {{ min($todayEarnings * 2, 100) }}%"></div>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1">
-                        <span>متوسط الأرباح اليومية</span>
-                        <span class="fw-bold">{{ number_format($avgDailyEarnings ?? 0, 2) }} ريال</span>
+                        <span>أرباح الأسبوع</span>
+                        <span class="fw-bold">{{ number_format($weekEarnings, 2) }} ريال</span>
                     </div>
                     <div class="progress" style="height: 8px;">
-                        <div class="progress-bar bg-success" style="width: {{ min(($avgDailyEarnings ?? 0) * 2, 100) }}%"></div>
+                        <div class="progress-bar bg-success" style="width: {{ min($weekEarnings * 2, 100) }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>أرباح الشهر</span>
+                        <span class="fw-bold">{{ number_format($monthEarnings, 2) }} ريال</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: {{ min($monthEarnings * 2, 100) }}%"></div>
                     </div>
                 </div>
 

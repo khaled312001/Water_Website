@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.supplier')
 
 @section('title', 'لوحة تحكم المورد - سلسبيل مكة')
 @section('page-title', 'لوحة تحكم المورد')

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.supplier')
 
 @section('title', 'إدارة المنتجات - سلسبيل مكة')
 @section('page-title', 'إدارة المنتجات')

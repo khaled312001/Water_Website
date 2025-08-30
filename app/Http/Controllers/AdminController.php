@@ -543,14 +543,7 @@ class AdminController extends Controller
     // Supplier dashboard methods
     public function supplierDashboard()
     {
-        $supplier = auth()->user()->supplier;
-        $stats = [
-            'total_products' => Product::where('supplier_id', $supplier->id)->count(),
-            'total_orders' => Order::where('supplier_id', $supplier->id)->count(),
-            'total_earnings' => Order::where('supplier_id', $supplier->id)->sum('total_amount'),
-        ];
-
-        return view('supplier.dashboard', compact('stats'));
+        return 'Supplier dashboard method works!';
     }
 
     public function supplierProducts()

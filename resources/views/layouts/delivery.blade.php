@@ -509,7 +509,7 @@
                     <i class="fas fa-user-cog"></i>
                     الملف الشخصي
                 </a>
-                <a href="{{ route('delivery.location') }}" class="nav-link {{ request()->routeIs('delivery.location') ? 'active' : '' }}">
+                <a href="#" class="nav-link" onclick="updateLocation()">
                     <i class="fas fa-map-marker-alt"></i>
                     تحديث الموقع
                 </a>
@@ -668,6 +668,131 @@
         // Example: Add notification badges to menu items
         // addNotificationBadge(document.querySelector('a[href*="orders"]'), 5);
         // addNotificationBadge(document.querySelector('a[href*="earnings"]'), 3);
+
+        // Location update functionality
+        function updateLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    fetch('/delivery/location', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            lat: lat,
+                            lng: lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('تم تحديث الموقع بنجاح', 'success');
+                        } else {
+                            showNotification('حدث خطأ أثناء تحديث الموقع', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('حدث خطأ أثناء تحديث الموقع', 'error');
+                    });
+                }, function(error) {
+                    let errorMessage = 'لا يمكن تحديد موقعك';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'يرجى السماح بالوصول إلى الموقع';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'معلومات الموقع غير متاحة';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'انتهت مهلة تحديد الموقع';
+                            break;
+                    }
+                    showNotification(errorMessage, 'error');
+                });
+            } else {
+                showNotification('متصفحك لا يدعم تحديد الموقع', 'error');
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas ${icon} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Auto location tracking (every 5 minutes when active)
+        let locationTrackingInterval;
+        
+        function startLocationTracking() {
+            // Clear any existing interval
+            if (locationTrackingInterval) {
+                clearInterval(locationTrackingInterval);
+            }
+            
+            // Update location immediately
+            updateLocation();
+            
+            // Then update every 5 minutes
+            locationTrackingInterval = setInterval(updateLocation, 5 * 60 * 1000);
+        }
+        
+        function stopLocationTracking() {
+            if (locationTrackingInterval) {
+                clearInterval(locationTrackingInterval);
+                locationTrackingInterval = null;
+            }
+        }
+
+        // Start location tracking when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ask for location permission and start tracking
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    // Permission granted, start tracking
+                    startLocationTracking();
+                }, function(error) {
+                    // Permission denied or error, don't start tracking
+                    console.log('Location tracking not started:', error.message);
+                });
+            }
+        });
+
+        // Stop tracking when page is hidden (user switches tabs)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopLocationTracking();
+            } else {
+                // Resume tracking when page becomes visible again
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        startLocationTracking();
+                    });
+                }
+            }
+        });
     </script>
 
     @yield('scripts')

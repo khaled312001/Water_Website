@@ -25,6 +25,13 @@ Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('contact.submit');
 Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers');
+
+// Supplier Routes (must be before supplier/{id} route)
+Route::get('/supplier/dashboard', [AdminController::class, 'supplierDashboard'])->name('supplier.dashboard');
+Route::get('/supplier/products', [AdminController::class, 'supplierProducts'])->name('supplier.products');
+Route::get('/supplier/orders', [AdminController::class, 'supplierOrders'])->name('supplier.orders');
+Route::get('/supplier/earnings', [AdminController::class, 'supplierEarnings'])->name('supplier.earnings');
+
 Route::get('/supplier/{id}', [HomeController::class, 'supplierDetails'])->name('supplier.details');
 
 // Products Routes
@@ -116,12 +123,29 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
     });
 
-    // Supplier Routes
-    Route::middleware(['supplier'])->prefix('supplier')->name('supplier.')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'supplierDashboard'])->name('dashboard');
-        Route::get('/products', [AdminController::class, 'supplierProducts'])->name('products');
-        Route::get('/orders', [AdminController::class, 'supplierOrders'])->name('orders');
-        Route::get('/earnings', [AdminController::class, 'supplierEarnings'])->name('earnings');
+    // Test route without middleware
+    Route::get('/test-supplier', [AdminController::class, 'supplierDashboard'])->name('test.supplier');
+    
+    // Debug route to check user and supplier
+    Route::get('/debug-supplier', function() {
+        if (!auth()->check()) {
+            return 'Not logged in';
+        }
+        
+        $user = auth()->user();
+        $supplier = $user->supplier;
+        
+        return [
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'supplier_exists' => $supplier ? 'Yes' : 'No',
+            'supplier_id' => $supplier ? $supplier->id : 'N/A'
+        ];
+    });
+    
+    // Simple test route for supplier dashboard
+    Route::get('/simple-supplier', function() {
+        return 'Simple supplier route works!';
     });
 
     // Delivery Routes
@@ -134,10 +158,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/status', [DeliveryController::class, 'updateStatus'])->name('update-status');
         Route::get('/earnings', [DeliveryController::class, 'earnings'])->name('earnings');
         Route::get('/profile', [DeliveryController::class, 'profile'])->name('profile');
+        Route::put('/profile', [DeliveryController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/export/orders', [DeliveryController::class, 'exportOrders'])->name('export.orders');
+        Route::get('/export/earnings', [DeliveryController::class, 'exportEarnings'])->name('export.earnings');
+        Route::get('/export/profile', [DeliveryController::class, 'exportProfile'])->name('export.profile');
     });
 
     // Customer Routes
     Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
         Route::get('/dashboard', [HomeController::class, 'customerDashboard'])->name('dashboard');
     });
-}); 
+});
+
+
+
+// Alternative supplier dashboard route
+Route::get('/supplier-dashboard', [AdminController::class, 'supplierDashboard'])->name('supplier.dashboard.alternative');
+
+// Direct route test
+Route::get('/direct-supplier', function() {
+    return 'Direct route works!';
+});

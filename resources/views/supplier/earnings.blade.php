@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.supplier')
 
 @section('title', 'تقارير الأرباح - سلسبيل مكة')
 @section('page-title', 'تقارير الأرباح')
