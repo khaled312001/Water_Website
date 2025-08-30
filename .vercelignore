@@ -16,8 +16,6 @@ tests
 phpunit.xml
 .editorconfig
 .styleci.yml
-vendor
-composer.lock
 package-lock.json
 yarn.lock
 .DS_Store
