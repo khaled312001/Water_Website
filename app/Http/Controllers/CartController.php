@@ -120,4 +120,11 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
         return array_sum(array_column($cart, 'quantity'));
     }
+
+    public function getCount()
+    {
+        return response()->json([
+            'count' => $this->getCartCount()
+        ]);
+    }
 } 

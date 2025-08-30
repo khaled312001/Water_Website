@@ -744,6 +744,26 @@
                 }
             });
         });
+
+        // Update cart count
+        function updateCartCount() {
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                // Get cart count from session or localStorage
+                const cart = JSON.parse(localStorage.getItem('cart') || '{}');
+                const count = Object.values(cart).reduce((sum, item) => sum + (item.quantity || 0), 0);
+                
+                if (count > 0) {
+                    cartCount.textContent = count;
+                    cartCount.style.display = 'block';
+                } else {
+                    cartCount.style.display = 'none';
+                }
+            }
+        }
+
+        // Update cart count on page load
+        updateCartCount();
     </script>
     
     @yield('scripts')
